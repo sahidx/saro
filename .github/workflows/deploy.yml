@@ -24,10 +24,11 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
               cd /var/www/saro &&
+              git config --global --add safe.directory /var/www/saro &&
               git fetch origin main &&
               git reset --hard origin/main &&
               npm ci &&
               npm run build &&
-              pm2 restart saro || pm2 start dist/index.js --name saro &&
+              pm2 restart saro --update-env || pm2 start dist/index.js --name saro --env production &&
               pm2 save
           "
