@@ -23,7 +23,6 @@ import {
   BarChart3, 
   Calendar, 
   Upload,
-  Settings,
   LogOut,
   GraduationCap,
   FlaskConical,

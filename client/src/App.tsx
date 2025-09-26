@@ -26,7 +26,7 @@ import Exams from "@/pages/teacher/Exams";
 import ExamGrading from "@/pages/teacher/ExamGrading";
 import Quest from "@/pages/teacher/Quest";
 import Attendance from "@/pages/teacher/Attendance";
-import APISettings from "@/pages/teacher/APISettings";
+
 import FeeCollection from "@/pages/FeeCollection";
 
 // Student feature pages
@@ -110,7 +110,7 @@ function Router() {
               <Route path="/teacher/monthly-results" component={MonthlyResultsManagement} />
               <Route path="/teacher/rankings" component={Rankings} />
               <Route path="/teacher/fees" component={FeeCollection} />
-              <Route path="/teacher/api-settings" component={APISettings} />
+
               <Route path="/teacher/question-bank" component={TeacherQuestionBank} />
               <Route path="/courses" component={TeacherCourseManagement} />
               <Route path="/profile" component={TeacherProfileManagement} />
