@@ -36,7 +36,7 @@ const teacherMenuItems = [
   { icon: CalendarCheck, label: 'Attendance', href: '/attendance' },
   { icon: DollarSign, label: 'Fee Collection', href: '/teacher/fees' },
   { icon: Bell, label: 'Students', href: '/teacher/students' },
-  { icon: Settings, label: 'API Keys', href: '/teacher/api-settings' },
+  // { icon: Settings, label: 'API Keys', href: '/teacher/api-settings' }, // Disabled - API keys managed manually
   { icon: HelpCircle, label: 'Question Bank', href: '/teacher/question-bank' },
   { icon: BookOpen, label: 'Course Management', href: '/courses' },
   { icon: User, label: 'Profile Management', href: '/profile' },
