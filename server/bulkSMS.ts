@@ -32,6 +32,8 @@ interface BulkSMSResult {
   sentCount: number;
   failedCount: number;
   totalCreditsUsed: number;
+  message?: string;
+  code?: number;
   failedMessages: Array<{
     recipient: SMSRecipient;
     error: string;
@@ -39,16 +41,33 @@ interface BulkSMSResult {
   }>;
 }
 
+interface SMSBalanceInfo {
+  hasBalance: boolean;
+  currentBalance: number;
+  requiredCredits: number;
+  recipientCount: number;
+  message?: string;
+}
+
+interface BatchSMSPreview {
+  batchId: string;
+  batchName: string;
+  studentCount: number;
+  parentCount: number;
+  totalRecipients: number;
+  smsRequired: number;
+}
+
 export class BulkSMSService {
   private apiKey: string;
   private baseUrl = 'http://bulksmsbd.net/api/smsapi';
-  private senderId = '8809617628909'; // Exact sender ID as provided by user
-  private costPerPart = 0.39; // 0.39 paisa per SMS part
+  private senderId = '8809617628909'; // Admin account with infinite SMS
+  private costPerPart = 0.39; // 0.39 paisa per SMS part (for tracking purposes)
   private storage: IStorage;
 
   constructor(storage: IStorage) {
-    // Use API key from environment or fallback to provided key
-    this.apiKey = process.env.BULKSMS_API_KEY || 'gsOKLO6XtKsANCvgPHNt';
+    // Hardcoded admin API key with infinite SMS capability
+    this.apiKey = 'gsOKLO6XtKsANCvgPHNt';
     this.storage = storage;
     console.log('📱 BulkSMS Bangladesh API initialized with professional billing and credit management');
   }
@@ -386,6 +405,262 @@ export class BulkSMSService {
       console.log(`💾 SMS logged: ${billing.smsParts} parts, ${billing.totalCost.toFixed(2)} paisa cost`);
     } catch (error) {
       console.error('📝 Failed to log SMS to database:', error);
+    }
+  }
+
+  // Check SMS balance and preview requirements
+  async checkSMSBalance(userId: string, recipientCount: number, message: string): Promise<SMSBalanceInfo> {
+    try {
+      const user = await this.storage.getUser(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const billing = this.calculateSMSBilling(message);
+      const requiredSMS = billing.smsParts * recipientCount;
+      const availableBalance = user.smsCredits || 0;
+      const hasBalance = availableBalance >= requiredSMS;
+
+      return {
+        hasBalance,
+        currentBalance: availableBalance,
+        requiredCredits: requiredSMS,
+        recipientCount,
+        message: hasBalance ? 
+          `Balance sufficient. You have ${availableBalance} credits, need ${requiredSMS}` : 
+          `Insufficient balance. You have ${availableBalance} credits, need ${requiredSMS}`
+      };
+    } catch (error) {
+      console.error('Error checking SMS balance:', error);
+      throw error;
+    }
+  }
+
+  // Get batch-wise SMS preview for monthly results
+  async getBatchSMSPreview(batchIds?: string[], message: string = 'Sample message'): Promise<BatchSMSPreview[]> {
+    try {
+      const billing = this.calculateSMSBilling(message);
+      let batches;
+      
+      if (batchIds && batchIds.length > 0) {
+        batches = [];
+        for (const batchId of batchIds) {
+          const batch = await this.storage.getBatchById(batchId);
+          if (batch) batches.push(batch);
+        }
+      } else {
+        batches = await this.storage.getAllBatches();
+      }
+
+      const batchPreviews: BatchSMSPreview[] = [];
+
+      for (const batch of batches) {
+        const students = await this.storage.getStudentsByBatch(batch.id);
+        const studentCount = students.filter(s => s.phoneNumber).length;
+        const parentCount = students.filter(s => s.parentPhoneNumber).length;
+        const totalRecipients = studentCount + parentCount; // Assuming we send to both
+        const smsRequired = billing.smsParts * totalRecipients;
+
+        batchPreviews.push({
+          batchId: batch.id,
+          batchName: batch.name,
+          studentCount,
+          parentCount,
+          totalRecipients,
+          smsRequired
+        });
+      }
+
+      return batchPreviews;
+    } catch (error) {
+      console.error('Error getting batch SMS preview:', error);
+      throw error;
+    }
+  }
+
+  // Send attendance SMS with balance check
+  async sendAttendanceSMS(studentId: string, batchId: string, attendanceData: any, teacherId: string): Promise<SMSResponse> {
+    try {
+      const student = await this.storage.getUser(studentId);
+      const teacher = await this.storage.getUser(teacherId);
+      const batch = await this.storage.getBatchById(batchId);
+      
+      if (!student || !teacher || !batch) {
+        throw new Error('Required data not found');
+      }
+
+      const message = `প্রিয় ${student.firstName} ${student.lastName} এর অভিভাবক, ${new Date().toLocaleDateString('bn-BD')} তারিখে আপনার সন্তান ক্লাসে ${attendanceData.status === 'present' ? 'উপস্থিত' : 'অনুপস্থিত'} ছিল। ${batch.name} - ${teacher.firstName} ${teacher.lastName}`;
+
+      // Check balance for parent SMS
+      const recipients: string[] = [];
+      if (student.parentPhoneNumber) recipients.push(student.parentPhoneNumber);
+      if (student.phoneNumber && student.phoneNumber !== student.parentPhoneNumber) recipients.push(student.phoneNumber);
+
+      if (recipients.length === 0) {
+        return { success: false, code: 0, message: 'No valid phone numbers found' };
+      }
+
+      const balanceInfo = await this.checkSMSBalance(teacherId, recipients.length, message);
+      
+      if (!balanceInfo.hasBalance) {
+        // Save attendance data but don't send SMS
+        console.log(`⚠️  SMS balance insufficient. Required: ${balanceInfo.requiredCredits}, Available: ${balanceInfo.currentBalance}`);
+        return {
+          success: false,
+          code: 1001,
+          message: balanceInfo.message || `SMS balance insufficient. Required: ${balanceInfo.requiredCredits}, Available: ${balanceInfo.currentBalance}`,
+          smsCount: balanceInfo.requiredCredits
+        };
+      }
+
+      // Send SMS to all recipients
+      let sentCount = 0;
+      let failedCount = 0;
+
+      for (const phone of recipients) {
+        const recipientType = phone === student.parentPhoneNumber ? 'parent' : 'student';
+        const result = await this.sendSMS(phone, message);
+        
+        if (result.success) {
+          sentCount++;
+          // Deduct credits from teacher
+          await this.storage.deductSmsCredits(teacherId, result.smsCount || 1);
+        } else {
+          failedCount++;
+        }
+
+        // Log SMS
+        await this.logSMS({
+          recipientType,
+          recipientPhone: phone,
+          recipientName: recipientType === 'parent' ? `${student.firstName} এর অভিভাবক` : `${student.firstName} ${student.lastName}`,
+          studentId: student.id,
+          smsType: 'attendance',
+          message,
+          status: result.success ? 'sent' : 'failed',
+          credits: result.smsCount || 1,
+          sentBy: teacherId
+        });
+      }
+
+      return {
+        success: sentCount > 0,
+        code: sentCount > 0 ? 1000 : 1006,
+        message: `SMS sent to ${sentCount} recipients, ${failedCount} failed`,
+        smsCount: sentCount
+      };
+
+    } catch (error) {
+      console.error('Error sending attendance SMS:', error);
+      throw error;
+    }
+  }
+
+  // Send monthly result SMS for all batches
+  async sendMonthlyResultSMS(month: number, year: number, teacherId: string, batchIds?: string[]): Promise<BatchSMSPreview[]> {
+    try {
+      const teacher = await this.storage.getUser(teacherId);
+      if (!teacher || teacher.role !== 'teacher') {
+        throw new Error('Invalid teacher');
+      }
+
+      // Get monthly results for specified batches or all batches
+      const monthlyResults = await this.storage.getMonthlyResults(year, month, batchIds);
+      const batchSummaries: BatchSMSPreview[] = [];
+      
+      for (const result of monthlyResults) {
+        const student = await this.storage.getUser(result.studentId);
+        const batch = await this.storage.getBatchById(result.batchId);
+        
+        if (!student || !batch) continue;
+
+        const message = `প্রিয় ${student.firstName} ${student.lastName} এর অভিভাবক, ${month}/${year} মাসের ফলাফল: গড় নম্বর ${result.examAverage}%, হাজিরা ${result.attendancePercentage}%, অবস্থান ${result.classRank}/${result.totalStudents}। মোট পরীক্ষা: ${result.totalExams}টি। - ${teacher.firstName} ${teacher.lastName}`;
+
+        const recipients: string[] = [];
+        if (student.parentPhoneNumber) recipients.push(student.parentPhoneNumber);
+        if (student.phoneNumber && student.phoneNumber !== student.parentPhoneNumber) recipients.push(student.phoneNumber);
+
+        if (recipients.length === 0) continue;
+
+        const balanceInfo = await this.checkSMSBalance(teacherId, recipients.length, message);
+        
+        if (!balanceInfo.hasBalance) {
+          console.log(`⚠️  Insufficient balance for ${student.firstName} ${student.lastName}. Required: ${balanceInfo.requiredCredits}, Available: ${balanceInfo.currentBalance}`);
+          continue;
+        }
+
+        // Send SMS to recipients
+        for (const phone of recipients) {
+          const recipientType = phone === student.parentPhoneNumber ? 'parent' : 'student';
+          const smsResult = await this.sendSMS(phone, message);
+          
+          if (smsResult.success) {
+            await this.storage.deductSmsCredits(teacherId, smsResult.smsCount || 1);
+          }
+
+          await this.logSMS({
+            recipientType,
+            recipientPhone: phone,
+            recipientName: recipientType === 'parent' ? `${student.firstName} এর অভিভাবক` : `${student.firstName} ${student.lastName}`,
+            studentId: student.id,
+            smsType: 'exam_result',
+            message,
+            status: smsResult.success ? 'sent' : 'failed',
+            credits: smsResult.smsCount || 1,
+            sentBy: teacherId
+          });
+        }
+
+        // Update monthly result SMS notification flag
+        await this.storage.markMonthlyResultSMSSent(result.id);
+      }
+
+      return batchSummaries;
+    } catch (error) {
+      console.error('Error sending monthly result SMS:', error);
+      throw error;
+    }
+  }
+
+  // Generate monthly SMS alert for day before
+  async getMonthlyAlertPreview(): Promise<BatchSMSPreview[]> {
+    try {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // Check if tomorrow is the last day of the month
+      const lastDayOfMonth = new Date(tomorrow.getFullYear(), tomorrow.getMonth() + 1, 0);
+      
+      if (tomorrow.getDate() !== lastDayOfMonth.getDate()) {
+        return []; // Not the day before month end
+      }
+
+      const currentMonth = tomorrow.getMonth() + 1;
+      const currentYear = tomorrow.getFullYear();
+      
+      // Get all batches with pending monthly results
+      const sampleMessage = `প্রিয় অভিভাবক, ${currentMonth}/${currentYear} মাসের ফলাফল: গড় নম্বর ৮৫%, হাজিরা ৯০%, অবস্থান ৫/৩০। মোট পরীক্ষা: ৪টি। - বেলাল স্যার`;
+      
+      return await this.getBatchSMSPreview(undefined, sampleMessage);
+    } catch (error) {
+      console.error('Error generating monthly alert preview:', error);
+      throw error;
+    }
+  }
+
+  // Request SMS credits from super admin
+  async requestSMSCredits(teacherId: string, requestedAmount: number, justification: string): Promise<boolean> {
+    try {
+      // In a real system, this would create a notification for super admin
+      // For now, we'll log the request
+      console.log(`📱 SMS Credit Request - Teacher: ${teacherId}, Amount: ${requestedAmount}, Reason: ${justification}`);
+      
+      // This would typically create a notification or database entry for super admin approval
+      // For demo purposes, we'll just log it
+      return true;
+    } catch (error) {
+      console.error('Error requesting SMS credits:', error);
+      return false;
     }
   }
 }

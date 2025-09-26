@@ -10,18 +10,7 @@ const anthropic = new Anthropic({
 export async function generateQuestions(topic: string, subject: string, count: number, difficulty: string): Promise<any> {
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
-      // Return sample questions if no API key
-      const sampleQuestions = [];
-      for (let i = 0; i < count; i++) {
-        sampleQuestions.push({
-          questionText: `Sample ${subject} question ${i + 1} about ${topic} (${difficulty} level)`,
-          questionType: 'mcq',
-          options: ['Option A', 'Option B', 'Option C', 'Option D'],
-          correctAnswer: 'Option A',
-          marks: 2
-        });
-      }
-      return sampleQuestions;
+      throw new Error('Anthropic API key is required for question generation. Please configure ANTHROPIC_API_KEY in environment variables.');
     }
 
     const prompt = `Generate ${count} ${difficulty} level multiple choice questions about ${topic} in ${subject}. 
@@ -59,18 +48,7 @@ Return only a JSON array of questions in this exact format:
     }
   } catch (error) {
     console.error('Error generating questions:', error);
-    // Return sample questions as fallback
-    const sampleQuestions = [];
-    for (let i = 0; i < count; i++) {
-      sampleQuestions.push({
-        questionText: `Sample ${subject} question ${i + 1} about ${topic} (${difficulty} level)`,
-        questionType: 'mcq',
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: 'Option A',
-        marks: 2
-      });
-    }
-    return sampleQuestions;
+    throw new Error('Failed to generate questions. Please check API configuration and try again.');
   }
 }
 
@@ -78,7 +56,7 @@ Return only a JSON array of questions in this exact format:
 export async function solveDoubt(question: string, subject: string): Promise<string> {
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
-      return `Sample solution for your ${subject} question: "${question}". The AI would provide a detailed step-by-step explanation here with proper formulas and concepts.`;
+      throw new Error('Anthropic API key is required for doubt solving. Please configure ANTHROPIC_API_KEY in environment variables.');
     }
 
     const prompt = `As an expert ${subject} teacher, solve this student's doubt:
@@ -102,6 +80,6 @@ Make it educational and easy to understand for a student.`;
     return (response.content[0] as any).text;
   } catch (error) {
     console.error('Error solving doubt:', error);
-    return `Sample solution for your ${subject} question: "${question}". The AI would provide a detailed step-by-step explanation here with proper formulas and concepts.`;
+    throw new Error('Failed to solve doubt. Please check API configuration and try again.');
   }
 }

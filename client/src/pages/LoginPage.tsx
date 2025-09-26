@@ -67,39 +67,38 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-      {/* Lightweight Background Effects */}
-      <div className="absolute inset-0 opacity-50">
-        <div className="absolute top-10 left-10 w-16 h-16 bg-blue-500/10 rounded-full"></div>
-        <div className="absolute top-32 right-16 w-12 h-12 bg-green-500/10 rounded-full"></div>
-        <div className="absolute bottom-20 left-20 w-20 h-20 bg-purple-500/10 rounded-full"></div>
-        <div className="absolute bottom-40 right-8 w-10 h-10 bg-yellow-500/10 rounded-full"></div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950 relative overflow-hidden">
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-400/15 rounded-full blur-xl"></div>
+        <div className="absolute top-32 right-16 w-16 h-16 bg-white/10 rounded-full blur-lg"></div>
+        <div className="absolute bottom-20 left-20 w-24 h-24 bg-yellow-500/12 rounded-full blur-xl"></div>
+        <div className="absolute bottom-40 right-8 w-12 h-12 bg-blue-400/15 rounded-full blur-lg"></div>
       </div>
 
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-gradient-to-r from-emerald-500 to-blue-600 p-4 rounded-2xl shadow-lg">
-              <FlaskConical className="w-8 h-8 text-white" />
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-500 p-6 rounded-3xl shadow-xl">
+              <Smartphone className="w-10 h-10 text-blue-900" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Chemistry & ICT Care
+          <h1 className="text-4xl font-bold text-white mb-3 hero-title">
+            Student Nursing Center
           </h1>
-          <p className="text-slate-300 text-lg">
-            by Belal Sir
+          <p className="text-yellow-300 text-xl font-semibold hero-subtitle">
+            by Golam Sarowar Sir
           </p>
         </div>
 
-        {/* Login Card */}
-        <Card className="w-full max-w-md bg-gray-800/90 border-gray-700 shadow-2xl">
-          <CardHeader className="text-center space-y-4">
-            <CardTitle className="text-2xl text-white">Login</CardTitle>
-            <CardDescription className="text-gray-300">
+        {/* Enhanced Login Card */}
+        <Card className="w-full max-w-md bg-white/95 backdrop-blur-xl border-2 border-white/20 shadow-2xl rounded-3xl">
+          <CardHeader className="text-center space-y-4 pb-6">
+            <CardTitle className="text-3xl text-blue-900 font-bold">Login</CardTitle>
+            <CardDescription className="text-blue-700 text-lg font-medium">
               Enter your phone number and password to access your account
             </CardDescription>
-            
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -110,7 +109,7 @@ export default function LoginPage() {
                   name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-emerald-300 text-sm">Phone Number</FormLabel>
+                      <FormLabel className="text-blue-900 text-base font-semibold">Phone Number</FormLabel>
                       <FormControl>
                         <input 
                           type="text"
@@ -119,7 +118,7 @@ export default function LoginPage() {
                           onChange={field.onChange}
                           onBlur={field.onBlur}
                           name={field.name}
-                          className="flex h-12 w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-base text-white placeholder:text-gray-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                          className="flex h-14 w-full rounded-xl border-2 border-blue-200 bg-white px-4 py-3 text-lg text-blue-900 placeholder:text-blue-400 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-200 focus:outline-none shadow-md transition-all"
                           data-testid="input-phone"
                           autoComplete="tel"
                           inputMode="tel"
@@ -135,7 +134,7 @@ export default function LoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-emerald-300 text-sm">Password</FormLabel>
+                      <FormLabel className="text-blue-900 text-base font-semibold">Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <input 
@@ -145,19 +144,19 @@ export default function LoginPage() {
                             onChange={field.onChange}
                             onBlur={field.onBlur}
                             name={field.name}
-                            className="flex h-12 w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 pr-12 text-base text-white placeholder:text-gray-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                            className="flex h-14 w-full rounded-xl border-2 border-blue-200 bg-white px-4 py-3 pr-14 text-lg text-blue-900 placeholder:text-blue-400 focus:border-yellow-500 focus:ring-4 focus:ring-yellow-200 focus:outline-none shadow-md transition-all"
                             data-testid="input-password"
                             autoComplete="current-password"
                           />
                           <button
                             type="button"
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            className="absolute inset-y-0 right-0 pr-4 flex items-center"
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? (
-                              <EyeOff className="h-5 w-5 text-gray-400" />
+                              <EyeOff className="h-6 w-6 text-blue-600" />
                             ) : (
-                              <Eye className="h-5 w-5 text-gray-400" />
+                              <Eye className="h-6 w-6 text-blue-600" />
                             )}
                           </button>
                         </div>
@@ -177,7 +176,7 @@ export default function LoginPage() {
                 <Button 
                   type="submit" 
                   disabled={loginMutation.isPending}
-                  className="w-full h-12 bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700 font-semibold text-lg rounded-lg"
+                  className="w-full h-16 bg-gradient-to-r from-blue-900 to-blue-800 text-white hover:from-blue-800 hover:to-blue-700 font-bold text-xl rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                   data-testid="login-submit"
                 >
                   {loginMutation.isPending ? (

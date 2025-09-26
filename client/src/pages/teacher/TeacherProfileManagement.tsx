@@ -24,19 +24,13 @@ const profileFormSchema = z.object({
   education: z.string().optional(),
   currentPosition: z.string().optional(), 
   specialization: z.string().optional(),
-  motto: z.string().optional(),
   bio: z.string().optional(),
   avatarUrl: z.string().optional(),
   contactEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   contactPhone: z.string().optional(),
-  yearsOfExperience: z.number().min(0, "Experience must be non-negative").optional(),
+  youtubeChannel: z.string().optional(),
+  facebookPage: z.string().optional(),
   isPublic: z.boolean(),
-  socialLinks: z.object({
-    facebook: z.string().optional(),
-    linkedin: z.string().optional(),
-    twitter: z.string().optional(),
-    website: z.string().optional(),
-  }).optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
@@ -53,19 +47,13 @@ export default function TeacherProfileManagement() {
       education: "",
       currentPosition: "",
       specialization: "",
-      motto: "",
       bio: "",
       avatarUrl: "",
       contactEmail: "",
       contactPhone: "",
-      yearsOfExperience: 0,
+      youtubeChannel: "",
+      facebookPage: "",
       isPublic: true,
-      socialLinks: {
-        facebook: "",
-        linkedin: "",
-        twitter: "",
-        website: "",
-      },
     },
   });
 
@@ -77,28 +65,18 @@ export default function TeacherProfileManagement() {
   // Update form when profile data is loaded
   useEffect(() => {
     if (profile) {
-      const socialLinks = typeof profile.socialLinks === 'string' 
-        ? JSON.parse(profile.socialLinks || '{}') 
-        : profile.socialLinks || {};
-        
       form.reset({
         displayName: profile.displayName || "",
         education: profile.education || "",
         currentPosition: profile.currentPosition || "",
         specialization: profile.specialization || "",
-        motto: profile.motto || "",
         bio: profile.bio || "",
         avatarUrl: profile.avatarUrl || "",
         contactEmail: profile.contactEmail || "",
         contactPhone: profile.contactPhone || "",
-        yearsOfExperience: profile.yearsOfExperience || 0,
+        youtubeChannel: profile.youtubeChannel || "",
+        facebookPage: profile.facebookPage || "",
         isPublic: profile.isPublic !== false,
-        socialLinks: {
-          facebook: socialLinks.facebook || "",
-          linkedin: socialLinks.linkedin || "",
-          twitter: socialLinks.twitter || "",
-          website: socialLinks.website || "",
-        },
       });
     }
   }, [profile, form]);
@@ -209,28 +187,18 @@ export default function TeacherProfileManagement() {
 
   const handleCancel = () => {
     if (profile) {
-      const socialLinks = typeof profile.socialLinks === 'string' 
-        ? JSON.parse(profile.socialLinks || '{}') 
-        : profile.socialLinks || {};
-        
       form.reset({
         displayName: profile.displayName || "",
         education: profile.education || "",
         currentPosition: profile.currentPosition || "",
         specialization: profile.specialization || "",
-        motto: profile.motto || "",
         bio: profile.bio || "",
         avatarUrl: profile.avatarUrl || "",
         contactEmail: profile.contactEmail || "",
         contactPhone: profile.contactPhone || "",
-        yearsOfExperience: profile.yearsOfExperience || 0,
+        youtubeChannel: profile.youtubeChannel || "",
+        facebookPage: profile.facebookPage || "",
         isPublic: profile.isPublic !== false,
-        socialLinks: {
-          facebook: socialLinks.facebook || "",
-          linkedin: socialLinks.linkedin || "",
-          twitter: socialLinks.twitter || "",
-          website: socialLinks.website || "",
-        },
       });
     }
     setIsEditing(false);
@@ -278,7 +246,7 @@ export default function TeacherProfileManagement() {
               <div className="flex items-center space-x-4">
                 {/* Profile Picture Display */}
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
                     {profile?.avatarUrl ? (
                       <img 
                         src={profile.avatarUrl} 
@@ -390,26 +358,6 @@ export default function TeacherProfileManagement() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="yearsOfExperience"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>অভিজ্ঞতা (বছর)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="10"
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          disabled={!isEditing}
-                          data-testid="input-experience"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
               <FormField
@@ -462,25 +410,6 @@ export default function TeacherProfileManagement() {
                         {...field} 
                         disabled={!isEditing}
                         data-testid="input-specialization"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="motto"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>মূলমন্ত্র</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Dedicated to Excellence in Education" 
-                        {...field} 
-                        disabled={!isEditing}
-                        data-testid="input-motto"
                       />
                     </FormControl>
                     <FormMessage />
@@ -559,34 +488,18 @@ export default function TeacherProfileManagement() {
                     </FormItem>
                   )}
                 />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                সামাজিক যোগাযোগ
-              </CardTitle>
-              <CardDescription>
-                আপনার সামাজিক যোগাযোগের লিঙ্ক
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="socialLinks.facebook"
+                  name="youtubeChannel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Facebook</FormLabel>
+                      <FormLabel>ইউটিউব চ্যানেল</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="https://facebook.com/username" 
+                          placeholder="https://youtube.com/@BelalSirChemistry" 
                           {...field} 
                           disabled={!isEditing}
-                          data-testid="input-facebook"
+                          data-testid="input-youtube-channel"
                         />
                       </FormControl>
                       <FormMessage />
@@ -595,52 +508,16 @@ export default function TeacherProfileManagement() {
                 />
                 <FormField
                   control={form.control}
-                  name="socialLinks.linkedin"
+                  name="facebookPage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>LinkedIn</FormLabel>
+                      <FormLabel>ফেসবুক পেজ</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="https://linkedin.com/in/username" 
+                          placeholder="https://facebook.com/BelalSirChemistry" 
                           {...field} 
                           disabled={!isEditing}
-                          data-testid="input-linkedin"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="socialLinks.twitter"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Twitter</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="https://twitter.com/username" 
-                          {...field} 
-                          disabled={!isEditing}
-                          data-testid="input-twitter"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="socialLinks.website"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ওয়েবসাইট</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="https://yourwebsite.com" 
-                          {...field} 
-                          disabled={!isEditing}
-                          data-testid="input-website"
+                          data-testid="input-facebook-page"
                         />
                       </FormControl>
                       <FormMessage />

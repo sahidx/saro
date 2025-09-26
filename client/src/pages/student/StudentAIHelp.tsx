@@ -138,7 +138,7 @@ export default function StudentAIHelp() {
     <MobileWrapper>
       <div className={`min-h-screen ${isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' 
-        : 'bg-gradient-to-br from-white via-gray-50 to-cyan-50'
+        : 'bg-gradient-to-br from-white via-gray-50 to-purple-50'
       } transition-colors duration-300`}>
         
         {/* Header */}
@@ -264,9 +264,9 @@ export default function StudentAIHelp() {
                       : (isDarkMode ? 'bg-slate-800 text-gray-100 border border-slate-700' : 'bg-white text-gray-800 shadow-md')
                     }`}>
                       {msg.role === 'assistant' && (
-                        <div className="flex items-center gap-2 mb-2">
-                          <Bot className="w-4 h-4 text-purple-500" />
-                          <span className="font-semibold text-purple-500">Praggo AI</span>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Bot className="w-5 h-5 text-purple-500" />
+                          <span className="font-semibold text-purple-600">Praggo AI</span>
                           {isStreaming && idx === conversation.length - 1 && (
                             <div className="flex space-x-1">
                               <div className="w-1 h-1 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
@@ -276,7 +276,63 @@ export default function StudentAIHelp() {
                           )}
                         </div>
                       )}
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                      
+                      {/* Enhanced message rendering with better Bengali text support */}
+                      <div className={`leading-relaxed ${msg.role === 'assistant' ? 'text-base' : 'text-base'}`}>
+                        {msg.role === 'assistant' ? (
+                          <div className="space-y-3">
+                            {msg.content.split('\n').map((line, lineIdx) => {
+                              // Check if line contains question pattern
+                              if (line.match(/^[0-9০-৯]+\.|^প্রশ্ন|^Question/)) {
+                                return (
+                                  <div key={lineIdx} className={`font-semibold text-lg ${isDarkMode ? 'text-purple-200' : 'text-purple-800'} border-l-4 border-purple-400 pl-3 py-2 bg-purple-50 ${isDarkMode ? 'bg-purple-900/30' : ''} rounded-r-lg`}>
+                                    {line}
+                                  </div>
+                                );
+                              }
+                              
+                              // Check if line contains options (a, b, c, d or ক, খ, গ, ঘ)
+                              if (line.match(/^[abcdকখগঘ]\)|^[ABCD]\)/)) {
+                                return (
+                                  <div key={lineIdx} className={`ml-4 p-2 rounded-lg ${isDarkMode ? 'bg-slate-700/50' : 'bg-gray-50'} border-l-2 border-blue-300`}>
+                                    {line}
+                                  </div>
+                                );
+                              }
+                              
+                              // Check if line contains answer indication
+                              if (line.match(/উত্তর|Answer|সঠিক|correct/i)) {
+                                return (
+                                  <div key={lineIdx} className={`font-medium p-2 rounded-lg ${isDarkMode ? 'bg-green-900/30 text-green-200' : 'bg-green-50 text-green-800'} border border-green-300`}>
+                                    ✅ {line}
+                                  </div>
+                                );
+                              }
+                              
+                              // Check if line contains explanation
+                              if (line.match(/ব্যাখ্যা|Explanation|কারণ|because/i)) {
+                                return (
+                                  <div key={lineIdx} className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-900/30 border-blue-500' : 'bg-blue-50 border-blue-300'} border-l-4`}>
+                                    <span className="text-blue-600 font-medium">💡 </span>
+                                    {line}
+                                  </div>
+                                );
+                              }
+                              
+                              // Regular text
+                              return line.trim() ? (
+                                <p key={lineIdx} className="mb-2">
+                                  {line}
+                                </p>
+                              ) : (
+                                <br key={lineIdx} />
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

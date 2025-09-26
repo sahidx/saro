@@ -3,91 +3,104 @@
 
 export const DEVELOPER_PROFILE = {
   personal: {
-    name: 'Md Sahid Rahman',
-    title: 'Founder & CEO of Praggo',
-    subtitle: 'Civil Engineering Student',
+    name: 'গোলাম সারোয়ার',
+    nameEnglish: 'Golam Sarowar',
+    title: 'গণিত ও বিজ্ঞান শিক্ষক',
+    titleEnglish: 'Mathematics and Science Teacher',
+    subtitle: 'স্টুডেন্ট নার্সিং সেন্টার',
+    subtitleEnglish: 'Student Nursing Center',
     profileImage: '/Untitled_1757090195355.jpg',
-    university: 'Gopalganj Science and Technology University',
-    degree: 'B.Sc Civil Engineering (ongoing)',
-    email: 'sahidrahmanx@gmail.com',
-    facebook: 'https://www.facebook.com/share/16qPLuCvu8/',
-    founded: '2025',
-    established: '2025-Present'
+    university: 'ঢাকা বিশ্ববিদ্যালয়',
+    universityEnglish: 'University of Dhaka',
+    degree: 'গণিত ও বিজ্ঞান শিক্ষায় স্নাতকোত্তর',
+    degreeEnglish: 'Master in Mathematics and Science Education',
+    email: 'golamsakrowar@gmail.com',
+    phone: '01762602056',
+    whatsapp: '01762602056',
+    facebook: 'https://www.facebook.com/golam.sarowar',
+    founded: '2018',
+    established: '2018-Present',
+    experience: '15+ বছর',
+    experienceEnglish: '15+ Years'
   },
 
   bio: {
     bengali: {
-      intro: 'আমি মোঃ সাহিদ রহমান, প্রাগো গ্রুপের প্রতিষ্ঠাতা ও প্রধান নির্বাহী কর্মকর্তা। আমি একজন সাইবার সিকিউরিটি এক্সপার্ট এবং বাগ বাউন্টি হান্টার। আমি গোপালগঞ্জ বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয় থেকে সিভিল ইঞ্জিনিয়ারিং অধ্যয়নরত আছি।',
-      mission: 'আমি ACS-এ একজন সন্দেহ নিরসনকারী হিসেবে কাজ করি এবং ছাত্র-ছাত্রীদের শিক্ষায় সহায়তা করি। প্রযুক্তি ও সাইবার নিরাপত্তার মাধ্যমে আমি শিক্ষা ক্ষেত্রে অবদান রাখতে চাই।',
-      quote: 'উদ্ভাবন ও প্রযুক্তির মাধ্যমে আমরা একটি উন্নত ভবিষ্যৎ গড়তে পারি।'
+      intro: 'আমি গোলাম সারোয়ার, স্টুডেন্ট নার্সিং সেন্টারের প্রতিষ্ঠাতা ও প্রধান শিক্ষক। ১৫+ বছরের অভিজ্ঞতা নিয়ে আমি ৬ষ্ঠ থেকে ১০ম শ্রেণির শিক্ষার্থীদের গণিত ও বিজ্ঞান বিষয়ে পাঠদান করি।',
+      mission: 'আমার লক্ষ্য হলো প্রতিটি শিক্ষার্থীর গণিত ও বিজ্ঞানের প্রতি ভয় দূর করে তাদের মধ্যে এই বিষয়গুলোর প্রতি আগ্রহ সৃষ্টি করা। আমি বিশ্বাস করি সঠিক নির্দেশনায় প্রতিটি শিক্ষার্থী গণিত ও বিজ্ঞানে পারদর্শী হতে পারে।',
+      quote: 'গণিত ও বিজ্ঞান শুধু বিষয় নয়, এটি চিন্তা করার একটি পদ্ধতি। প্রতিটি সমস্যার সমাধান আছে, শুধু সঠিক পথ খুঁজে নিতে হয়।',
+      vision: 'আমার স্বপ্ন হলো এমন একটি শিক্ষা প্রতিষ্ঠান গড়া যেখানে শিক্ষার্থীরা গণিত ও বিজ্ঞানকে ভালোবাসবে এবং এর মাধ্যমে জীবনে সফল হবে।'
     }
   },
 
   skills: [
-    { name: 'Cyber Security Expert', level: 'Expert', years: 6, color: 'bg-red-500' },
-    { name: 'Bug Bounty Hunter', level: 'Professional', years: 5, color: 'bg-orange-500' },
-    { name: 'Web Development', level: 'Expert', years: 6, color: 'bg-purple-500' },
-    { name: 'React & TypeScript', level: 'Advanced', years: 4, color: 'bg-cyan-500' },
-    { name: 'Full Stack Development', level: 'Expert', years: 5, color: 'bg-blue-600' },
-    { name: 'Educational Technology', level: 'Advanced', years: 3, color: 'bg-green-500' }
+    { name: 'গণিত শিক্ষাদান (Mathematics Teaching)', level: 'বিশেষজ্ঞ', years: 15, color: 'bg-blue-500' },
+    { name: 'বিজ্ঞান শিক্ষা (Science Education)', level: 'বিশেষজ্ঞ', years: 15, color: 'bg-green-500' },
+    { name: 'উচ্চতর গণিত (Higher Mathematics)', level: 'বিশেষজ্ঞ', years: 12, color: 'bg-purple-500' },
+    { name: 'সাধারণ গণিত (General Mathematics)', level: 'বিশেষজ্ঞ', years: 15, color: 'bg-cyan-500' },
+    { name: 'শিক্ষার্থী পরামর্শ (Student Mentoring)', level: 'বিশেষজ্ঞ', years: 15, color: 'bg-orange-500' },
+    { name: 'পরীক্ষা প্রস্তুতি (Exam Preparation)', level: 'উন্নত', years: 12, color: 'bg-red-500' },
+    { name: 'পদার্থবিজ্ঞান (Physics)', level: 'বিশেষজ্ঞ', years: 10, color: 'bg-indigo-500' },
+    { name: 'বিজ্ঞান (Science)', level: 'দক্ষ', years: 8, color: 'bg-pink-500' }
   ],
 
   achievements: [
-    { title: 'Founder & CEO of Praggo', year: '2025-Present', type: 'leadership' },
-    { title: 'Civil Engineering Student', year: '2023-Present', type: 'education' },
-    { title: 'Cyber Security Expert', year: '2023-Present', type: 'professional' },
-    { title: 'Bug Bounty Hunter', year: '2023-Present', type: 'professional' },
-    { title: 'Doubt Solver at ACS', year: '2024-Present', type: 'education' }
+    { title: 'স্টুডেন্ট নার্সিং সেন্টার প্রতিষ্ঠাতা (Founder of Student Nursing Center)', year: '২০২০-বর্তমান', type: 'leadership' },
+    { title: 'গণিত ও বিজ্ঞান প্রধান শিক্ষক (Chief Mathematics & Science Instructor)', year: '২০২০-বর্তমান', type: 'education' },
+    { title: '১৫+ বছরের শিক্ষকতার অভিজ্ঞতা (15+ Years Teaching Experience)', year: '২০১০-বর্তমান', type: 'professional' },
+    { title: 'উচ্চতর গণিত বিশেষজ্ঞ (Higher Mathematics Specialist)', year: '২০১৫-বর্তমান', type: 'professional' },
+    { title: '৫০০+ সফল শিক্ষার্থী (500+ Successful Students)', year: '২০১০-বর্তমান', type: 'education' },
+    { title: 'বিজ্ঞান অলিম্পিয়াড প্রশিক্ষক (Science Olympiad Trainer)', year: '২০১৮-বর্তমান', type: 'achievement' },
+    { title: 'ডিজিটাল শিক্ষা পদ্ধতি বাস্তবায়ন (Digital Education Implementation)', year: '২০২২-বর্তমান', type: 'innovation' }
   ],
 
   company: {
-    name: 'Praggo Group',
-    founded: '2025',
-    vision: 'Leading technology and innovation for a better future',
-    mission: 'Providing comprehensive solutions across multiple industries',
+    name: 'Student Nursing Center',
+    nameBengali: 'স্টুডেন্ট নার্সিং সেন্টার',
+    tagline: 'গণিত ও বিজ্ঞানে উৎকর্ষতার ঠিকানা',
+    founded: '২০২০',
+    vision: 'গণিত ও বিজ্ঞান শিক্ষায় উৎকর্ষতা অর্জন ও প্রতিটি শিক্ষার্থীর সম্ভাবনা বিকাশ',
+    mission: 'আমাদের লক্ষ্য হলো মানসম্মত শিক্ষার মাধ্যমে শিক্ষার্থীদের গণিত ও বিজ্ঞানের প্রতি আগ্রহ সৃষ্টি করা এবং তাদের একাডেমিক সাফল্য নিশ্চিত করা',
     
     services: [
       {
-        name: 'Praggo Civil Engineering Firm & Interior',
-        nameBengali: 'স্থপতি উদ্ভাবনার ক্ষেত্র বাড়ির ডিজাইনে এবং ইন্টেরিয়ারে ডিজাইনে করে দেওয়া হয়',
-        category: 'construction',
-        established: '2020'
+        name: 'Class 6-8 Mathematics & Science',
+        nameBengali: '৬ষ্ঠ-৮ম শ্রেণি: সাধারণ গণিত ও বিজ্ঞান',
+        category: 'education',
+        established: '2020',
+        description: 'মৌলিক গণিত ও বিজ্ঞানের ধারণা তৈরি'
       },
       {
-        name: 'Praggo IT',
-        nameBengali: 'এখানে বিভিন্ন ব্যবসা প্রতিষ্ঠান, শিক্ষা প্রতিষ্ঠান, কোম্পানির কর্পোরেটিভ Website, Software & Apps তৈরি করা হয় এবং সকল প্রকার IT সেবা প্রদান করা হয়',
-        category: 'technology',
-        established: '2020'
+        name: 'Class 9-10 Higher Mathematics',
+        nameBengali: '৯ম-১০ম শ্রেণি: উচ্চতর গণিত',
+        category: 'education',
+        established: '2021',
+        description: 'জ্যামিতি, বীজগণিত ও ত্রিকোণমিতির উন্নত পাঠ'
       },
       {
-        name: 'Praggo Academy',
-        nameBengali: 'এখানে বুয়েট সহ পাবলিক বিশ্ববিদ্যালয়ের শিক্ষার্থীদের ভর্তি একাডেমিক, চাকুরি এবং প্রস্তুতি বিষয়ক শিক্ষা প্রদান করা হয়',
+        name: 'Class 9-10 General Mathematics',
+        nameBengali: '৯ম-১০ম শ্রেণি: সাধারণ গণিত',
+        category: 'education', 
+        established: '2020',
+        description: 'সাধারণ গণিতের সকল শাখার সম্পূর্ণ কোর্স'
+      },
+      {
+        name: 'Class 9-10 General Mathematics',
+        nameBengali: '৯ম ও ১০ম শ্রেণির সাধারণ গণিত',
         category: 'education',
         established: '2021'
       },
       {
-        name: 'Praggo Study Abroad',
-        nameBengali: 'এখানে শিক্ষার্থীদের বিদেশে ভর্তি সংক্রান্ত বিষয়ে সহায়তা করা হয়',
+        name: 'Student Mentoring & Career Guidance',
+        nameBengali: 'শিক্ষার্থীদের পরামর্শ ও ক্যারিয়ার গাইডেন্স',
         category: 'education',
-        established: '2022'
+        established: '2020'
       },
       {
-        name: 'Praggo Ad Agency',
-        nameBengali: 'এখানে বিভিন্ন ব্যবসা প্রতিষ্ঠানের অনলাইন মার্কেটিং, ফেসবুক বুস্টিং এবং ব্র্যান্ডিক গ্রাফিক্স কন্টেট তৈরি করে দেওয়া হয়',
-        category: 'marketing',
-        established: '2021'
-      },
-      {
-        name: 'Praggo Agro',
-        nameBengali: 'কৃষি ক্ষেত্রে আধুনিক প্রযুক্তি ও সেবা প্রদান',
-        category: 'agriculture',
-        established: '2022'
-      },
-      {
-        name: 'Praggo Properties',
-        nameBengali: 'রিয়েল এস্টেট ও সম্পত্তি সংক্রান্ত সেবা',
-        category: 'real-estate',
-        established: '2023'
+        name: 'Exam Preparation & Mock Tests',
+        nameBengali: 'পরীক্ষার প্রস্তুতি ও মডেল টেস্ট',
+        category: 'education',
+        established: '2020'
       }
     ]
   },

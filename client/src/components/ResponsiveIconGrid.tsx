@@ -17,9 +17,9 @@ import {
   Brain,
   ClipboardList,
   GraduationCap,
-  TrendingUp,
   ShoppingCart,
   CalendarCheck,
+  Calendar,
   Settings,
   Code
 } from 'lucide-react';
@@ -84,10 +84,10 @@ export function ResponsiveIconGrid({ items, isDarkMode, activeTab }: ResponsiveI
               className={`${sizeClasses.container} rounded-lg flex flex-col items-center justify-center p-2 sm:p-3 transition-all duration-300 hover:scale-110 hover:-translate-y-1 hover:shadow-lg ${
                 activeTab === item.id
                   ? isDarkMode
-                    ? 'bg-slate-800 border-2 border-cyan-400 shadow-lg shadow-cyan-400/20'
+                    ? 'bg-slate-800 border-2 border-purple-400 shadow-lg shadow-purple-400/20'
                     : 'bg-white border-2 border-orange-400 shadow-lg shadow-orange-400/20'
                   : isDarkMode
-                  ? 'bg-slate-900 border border-slate-600 hover:border-cyan-400 hover:bg-slate-800'
+                  ? 'bg-slate-900 border border-slate-600 hover:border-purple-400 hover:bg-slate-800'
                   : 'bg-gray-50 border border-gray-200 hover:border-orange-400 hover:bg-white hover:shadow-md'
               }`}
               data-testid={`icon-${item.id}`}
@@ -95,10 +95,10 @@ export function ResponsiveIconGrid({ items, isDarkMode, activeTab }: ResponsiveI
               <div className={`${sizeClasses.icon} mb-1 sm:mb-2 flex items-center justify-center transition-colors duration-200 ${
                 activeTab === item.id
                   ? isDarkMode
-                    ? 'text-cyan-400'
+                    ? 'text-purple-400'
                     : 'text-orange-500'
                   : isDarkMode
-                  ? 'text-slate-400 hover:text-cyan-400'
+                  ? 'text-slate-400 hover:text-purple-400'
                   : 'text-gray-500 hover:text-orange-500'
               }`}>
                 {item.icon}
@@ -106,10 +106,10 @@ export function ResponsiveIconGrid({ items, isDarkMode, activeTab }: ResponsiveI
               <span className={`${sizeClasses.text} font-medium text-center leading-tight transition-colors duration-200 ${
                 activeTab === item.id
                   ? isDarkMode
-                    ? 'text-cyan-400'
+                    ? 'text-purple-400'
                     : 'text-orange-500'
                   : isDarkMode
-                  ? 'text-slate-400 hover:text-cyan-400'
+                  ? 'text-slate-400 hover:text-purple-400'
                   : 'text-gray-500 hover:text-orange-500'
               }`}>
                 {item.label}
@@ -126,7 +126,7 @@ export function ResponsiveIconGrid({ items, isDarkMode, activeTab }: ResponsiveI
 export default ResponsiveIconGrid;
 
 // Predefined icon sets for different dashboard types
-export const getTeacherIcons = (setLocation: (path: string) => void): IconGridItem[] => [
+export const getTeacherIcons = (setLocation: (path: string) => void, setActiveTab?: (tab: string) => void): IconGridItem[] => [
   {
     id: 'overview',
     icon: <Home className="w-full h-full" />,
@@ -152,10 +152,16 @@ export const getTeacherIcons = (setLocation: (path: string) => void): IconGridIt
     onClick: () => setLocation('/teacher/exams')
   },
   {
+    id: 'calendar',
+    icon: <Calendar className="w-full h-full" />,
+    label: 'Academic Calendar',
+    onClick: () => setActiveTab ? setActiveTab('calendar') : setLocation('/teacher/calendar')
+  },
+  {
     id: 'attendance',
     icon: <CalendarCheck className="w-full h-full" />,
     label: 'Attendance',
-    onClick: () => setLocation('/attendance')
+    onClick: () => setActiveTab ? setActiveTab('attendance') : setLocation('/teacher/attendance')
   },
   {
     id: 'students',
@@ -164,10 +170,16 @@ export const getTeacherIcons = (setLocation: (path: string) => void): IconGridIt
     onClick: () => setLocation('/teacher/students')
   },
   {
-    id: 'reports',
-    icon: <TrendingUp className="w-full h-full" />,
-    label: 'Reports',
-    onClick: () => setLocation('/teacher/reports')
+    id: 'fees',
+    icon: <CreditCard className="w-full h-full" />,
+    label: 'Fee Collection',
+    onClick: () => setActiveTab ? setActiveTab('fees') : setLocation('/teacher/fees')
+  },
+  {
+    id: 'monthly-results',
+    icon: <Trophy className="w-full h-full" />,
+    label: 'Monthly Results',
+    onClick: () => setLocation('/teacher/monthly-results')
   },
   {
     id: 'api-settings',
@@ -186,12 +198,6 @@ export const getTeacherIcons = (setLocation: (path: string) => void): IconGridIt
     icon: <BookOpen className="w-full h-full" />,
     label: 'কোর্স',
     onClick: () => setLocation('/courses')
-  },
-  {
-    id: 'profile',
-    icon: <User className="w-full h-full" />,
-    label: 'প্রোফাইল',
-    onClick: () => setLocation('/profile')
   }
 ];
 
@@ -209,6 +215,12 @@ export const getStudentIcons = (setLocation: (path: string) => void): IconGridIt
     onClick: () => setLocation('/student/ai-help')
   },
   {
+    id: 'ai-questions',
+    icon: <Brain className="w-full h-full" />,
+    label: 'AI Questions',
+    onClick: () => setLocation('/student/ai-questions')
+  },
+  {
     id: 'exams',
     icon: <FileText className="w-full h-full" />,
     label: 'Exams',
@@ -221,10 +233,10 @@ export const getStudentIcons = (setLocation: (path: string) => void): IconGridIt
     onClick: () => setLocation('/student/attendance')
   },
   {
-    id: 'progress',
-    icon: <BarChart3 className="w-full h-full" />,
-    label: 'Reports',
-    onClick: () => setLocation('/student/reports')
+    id: 'monthly-results',
+    icon: <Trophy className="w-full h-full" />,
+    label: 'Monthly Results',
+    onClick: () => setLocation('/student/monthly-results')
   },
   {
     id: 'question-bank',

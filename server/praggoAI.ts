@@ -1,19 +1,26 @@
 import { GoogleGenAI } from "@google/genai";
-import { db } from "./db";
-import { praggoAIKeys, praggoAIUsage } from "@shared/schema";
-import { eq, and, sql } from "drizzle-orm";
 
-// Praggo AI - Bangladeshi Educational AI Assistant
-// Intelligent API key rotation system with database tracking
+// Praggo AI - 5 Hardcoded API Key Rotation System for VPS Production
+// Automatic rotation on quota limits with instant fallback
 
 class PraggoAIService {
   private static instance: PraggoAIService;
-  private apiKeys: Array<{ keyName: string; keyValue: string; keyIndex: number; }> = [];
+  
+  // 5 HARDCODED GEMINI API KEYS - PRODUCTION READY
+  private readonly API_KEYS = [
+    "AIzaSyABdNCR_6wfhSOUJoGPWpSqUTWOGtbbBiQ", // Key 1 - Primary
+    "ADD_YOUR_SECOND_KEY_HERE",                    // Key 2 - Backup
+    "ADD_YOUR_THIRD_KEY_HERE",                     // Key 3 - Backup  
+    "ADD_YOUR_FOURTH_KEY_HERE",                    // Key 4 - Backup
+    "ADD_YOUR_FIFTH_KEY_HERE"                      // Key 5 - Backup
+  ];
+  
   private currentKeyIndex = 0;
-  private readonly maxRetries = 7; // Support up to 7 API keys
+  private readonly modelName = 'gemini-2.0-flash-exp';
+  private readonly maxRetries = 5;
 
-  constructor() {
-    this.initializeAPIKeys();
+  private constructor() {
+    this.initializeKeys();
   }
 
   static getInstance(): PraggoAIService {
@@ -23,136 +30,47 @@ class PraggoAIService {
     return PraggoAIService.instance;
   }
 
-  // Initialize API keys from environment and database
-  private async initializeAPIKeys() {
-    const keyNames = [
-      'GEMINI_API_KEY',      // Primary key
-      'GEMINI_API_KEY_2', 
-      'GEMINI_API_KEY_3',
-      'GEMINI_API_KEY_4',
-      'GEMINI_API_KEY_5',
-      'GEMINI_API_KEY_6',
-      'GEMINI_API_KEY_7'
-    ];
-
-    // First, try to restore keys from database to environment
-    try {
-      const dbKeys = await db.select().from(praggoAIKeys)
-        .where(eq(praggoAIKeys.isEnabled, true));
-      
-      // Restore keys from database to environment
-      for (const dbKey of dbKeys) {
-        if (dbKey.keyValue && dbKey.keyValue.trim().length > 10) {
-          process.env[dbKey.keyName] = dbKey.keyValue;
-          console.log(`🔄 Restored Praggo AI key from database: ${dbKey.keyName}`);
-        }
-      }
-    } catch (error) {
-      console.log('💾 Database key restoration failed, using environment only');
-    }
-
-    this.apiKeys = keyNames
-      .map((keyName, index) => ({
-        keyName,
-        keyValue: process.env[keyName] || '',
-        keyIndex: index
-      }))
-      .filter(key => key.keyValue && key.keyValue.trim() !== '');
-
-    if (this.apiKeys.length > 0) {
-      console.log(`🎓 Praggo AI Enhanced System Activated! ${this.apiKeys.length} API keys ready for Bangladesh Education`);
-      console.log(`📚 Advanced Features: NCTB Curriculum • University Admission • Bengali AI Support`);
-      this.apiKeys.forEach((key, index) => {
-        console.log(`   🔑 Key ${index + 1}: ${key.keyName} (${key.keyValue.substring(0, 12)}...)`);
-      });
+  private initializeKeys() {
+    // Check if keys are properly configured
+    const validKeys = this.API_KEYS.filter(key => 
+      key && key.length > 30 && !key.includes('_HERE')
+    );
+    
+    if (validKeys.length === 0) {
+      console.warn('⚠️ Praggo AI: No valid API keys configured. Replace placeholder keys in API_KEYS array.');
     } else {
-      console.warn('⚠️ Praggo AI Demo Mode - Add API keys in Settings for full features');
-    }
-    
-    // Initialize database keys if they don't exist
-    await this.initializeDatabaseKeys();
-  }
-
-  // Initialize API keys in database
-  private async initializeDatabaseKeys() {
-    try {
-      for (const key of this.apiKeys) {
-        const existingKey = await db.select().from(praggoAIKeys)
-          .where(eq(praggoAIKeys.keyName, key.keyName)).limit(1);
-        
-        if (existingKey.length === 0) {
-          await db.insert(praggoAIKeys).values({
-            keyName: key.keyName,
-            keyIndex: key.keyIndex,
-            status: 'active',
-            isEnabled: true,
-            dailyUsageCount: 0
-          });
-          console.log(`✅ Initialized Praggo AI key: ${key.keyName}`);
-        }
-      }
-    } catch (error) {
-      console.log('📝 Database not ready for Praggo AI keys initialization, will use memory only');
+      console.log(`🎓 Praggo AI Enhanced System: ${validKeys.length}/5 keys active with rotation`);
+      console.log('📚 NCTB Curriculum • University Admission • Bengali AI Support');
     }
   }
 
-  // Refresh API keys from database - callable method
-  async refreshKeys() {
-    await this.initializeAPIKeys();
+  private getCurrentKey(): string | null {
+    const key = this.API_KEYS[this.currentKeyIndex];
+    return (key && key.length > 30 && !key.includes('_HERE')) ? key : null;
   }
 
-  // Get current active API key
-  private getCurrentKey(): { keyName: string; keyValue: string; keyIndex: number; } | null {
-    if (this.apiKeys.length === 0) {
-      return null;
-    }
-    return this.apiKeys[this.currentKeyIndex];
+  private getClient(): GoogleGenAI | null {
+    const key = this.getCurrentKey();
+    if (!key) return null;
+    return new GoogleGenAI({ apiKey: key });
   }
 
-  // Create Gemini client with current key
-  private createGeminiClient(): GoogleGenAI | null {
-    const currentKey = this.getCurrentKey();
-    if (!currentKey) {
-      console.warn('⚠️ No Praggo AI keys configured');
-      return null;
-    }
-    
-    console.log(`🤖 Using Praggo AI Key #${currentKey.keyIndex + 1}/${this.apiKeys.length} (${currentKey.keyName})`);
-    return new GoogleGenAI({ apiKey: currentKey.keyValue });
-  }
-
-  // Rotate to next available API key
-  private async rotateToNextKey(): Promise<boolean> {
-    if (this.apiKeys.length <= 1) {
-      console.warn('⚠️ No additional Praggo AI keys available for rotation');
-      return false;
-    }
-
-    const oldKey = this.getCurrentKey();
-    
-    // Mark current key as quota exceeded in database
-    if (oldKey) {
-      try {
-        await db.update(praggoAIKeys)
-          .set({ 
-            status: 'quota_exceeded',
-            quotaResetDate: new Date(Date.now() + 24 * 60 * 60 * 1000) // Reset tomorrow
-          })
-          .where(eq(praggoAIKeys.keyName, oldKey.keyName));
-      } catch (error) {
-        console.log('📝 Database update failed, continuing with memory rotation');
-      }
-    }
-
+  private rotateToNextKey(): boolean {
     const oldIndex = this.currentKeyIndex;
-    this.currentKeyIndex = (this.currentKeyIndex + 1) % this.apiKeys.length;
-    const newKey = this.getCurrentKey();
     
-    console.log(`🔄 Praggo AI rotated from Key #${oldIndex + 1} to #${this.currentKeyIndex + 1}`);
-    return true;
+    // Try to find next valid key
+    for (let i = 1; i <= this.maxRetries; i++) {
+      this.currentKeyIndex = (this.currentKeyIndex + 1) % this.API_KEYS.length;
+      if (this.getCurrentKey()) {
+        console.log(`🔄 Praggo AI rotated: Key #${oldIndex + 1} → Key #${this.currentKeyIndex + 1}`);
+        return true;
+      }
+    }
+    
+    console.warn('⚠️ All Praggo AI keys exhausted or invalid');
+    return false;
   }
 
-  // Check if error is quota/rate limit related
   private isQuotaError(error: any): boolean {
     const errorMessage = error?.message?.toLowerCase() || '';
     const errorStatus = error?.status || error?.code;
@@ -167,145 +85,69 @@ class PraggoAIService {
     );
   }
 
-  // Log API usage to database
-  private async logUsage(
-    userId: string,
-    userRole: 'teacher' | 'student',
-    requestType: 'generate_questions' | 'solve_doubt',
-    subject: 'chemistry' | 'ict',
-    success: boolean,
-    keyUsed?: string,
-    errorMessage?: string,
-    processingTime?: number,
-    promptLength?: number,
-    responseLength?: number
-  ) {
-    try {
-      await db.insert(praggoAIUsage).values({
-        userId,
-        userRole,
-        requestType,
-        keyUsed: keyUsed || 'none',
-        subject,
-        success,
-        errorMessage,
-        processingTime,
-        promptLength,
-        responseLength
-      });
-
-      // Update key usage count
-      if (keyUsed && success) {
-        await db.update(praggoAIKeys)
-          .set({ 
-            dailyUsageCount: sql`${praggoAIKeys.dailyUsageCount} + 1`,
-            lastUsed: new Date()
-          })
-          .where(eq(praggoAIKeys.keyName, keyUsed));
-      }
-    } catch (error) {
-      console.log('📝 Usage logging failed, continuing without database tracking');
-    }
+  // Compatibility method - no longer needed but kept for existing code
+  async refreshKeys() {
+    this.initializeKeys();
   }
 
-  // Main API call method with rotation and error handling
+  // Main API call method with 5-key rotation and error handling
   async makeAPICall(
     prompt: string,
     userId: string,
     userRole: 'teacher' | 'student',
     requestType: 'generate_questions' | 'solve_doubt',
-    subject: 'chemistry' | 'ict'
+    subject: 'science' | 'math'
   ): Promise<string> {
-    const startTime = Date.now();
     let attempt = 0;
     let lastError: any = null;
-    const promptLength = prompt.length;
 
-    while (attempt < this.maxRetries && attempt < this.apiKeys.length) {
-      const currentKey = this.getCurrentKey();
-      
-      if (!currentKey) {
-        const errorMsg = 'Praggo AI এর কোনো API key কনফিগার করা নেই। অনুগ্রহ করে GEMINI_API_KEY_1, GEMINI_API_KEY_2 ইত্যাদি সেট করুন।';
-        await this.logUsage(userId, userRole, requestType, subject, false, undefined, errorMsg);
-        throw new Error(errorMsg);
-      }
-
-      const genAI = this.createGeminiClient();
+    while (attempt < this.maxRetries) {
+      const genAI = this.getClient();
       if (!genAI) {
-        attempt++;
-        continue;
+        throw new Error('Praggo AI এর জন্য বৈধ Gemini API key সেট করা হয়নি।');
       }
 
       try {
-        console.log(`🎯 Praggo AI attempt ${attempt + 1}/${this.maxRetries}`);
+        console.log(`🤖 Praggo AI attempt ${attempt + 1}/${this.maxRetries} using Key #${this.currentKeyIndex + 1}`);
         
         const response = await genAI.models.generateContent({
-          model: "gemini-2.0-flash-exp",
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          model: this.modelName,
+          contents: [{ role: 'user', parts: [{ text: prompt }] }]
         });
 
-        // Check if response exists and has expected structure
-        if (!response) {
-          throw new Error('Gemini API returned no response');
+        // Parse response from various possible formats
+        const anyResp: any = response as any;
+        let result: string = '';
+        
+        if (typeof anyResp.text === 'function') {
+          result = anyResp.text();
+        } else if (typeof anyResp.text === 'string') {
+          result = anyResp.text;
+        } else if (anyResp.candidates?.[0]?.content?.parts?.[0]?.text) {
+          result = anyResp.candidates[0].content.parts[0].text;
+        } else if (anyResp.output_text) {
+          result = anyResp.output_text;
+        } else {
+          console.error('🚨 Unexpected Gemini API response structure:', JSON.stringify(anyResp, null, 2));
+          throw new Error('Gemini API সঠিক টেক্সট ফেরত দেয়নি');
         }
 
-        console.log('🔍 Gemini API Response Debug:', {
-          hasResponse: !!response.response,
-          hasResponseText: response.response && typeof response.response.text,
-          hasText: typeof response.text,
-          hasCandidates: !!response.candidates,
-          keys: Object.keys(response)
-        });
-
-        let result;
-        try {
-          if (response.response && typeof response.response.text === 'function') {
-            result = response.response.text();
-          } else if (response.response && response.response.candidates?.[0]?.content?.parts?.[0]?.text) {
-            result = response.response.candidates[0].content.parts[0].text;
-          } else if (typeof response.text === 'function') {
-            result = response.text();
-          } else if (response.candidates && response.candidates[0]?.content?.parts?.[0]?.text) {
-            result = response.candidates[0].content.parts[0].text;
-          } else {
-            console.error('🚨 Unexpected Gemini API response structure:', JSON.stringify(response, null, 2));
-            throw new Error('Gemini API returned invalid response structure');
-          }
-        } catch (textError) {
-          console.error('🔥 Error accessing response text:', textError);
-          console.log('📋 Full response object:', JSON.stringify(response, null, 2));
-          throw new Error(`Failed to extract text from Gemini response: ${textError.message}`);
-        }
-        const processingTime = Date.now() - startTime;
-        const responseLength = result.length;
-
-        // Log successful usage
-        await this.logUsage(
-          userId, userRole, requestType, subject, true, 
-          currentKey.keyName, undefined, processingTime, promptLength, responseLength
-        );
-
+        console.log(`✅ Praggo AI Key #${this.currentKeyIndex + 1} successful`);
         return result;
 
       } catch (error: any) {
         lastError = error;
-        const processingTime = Date.now() - startTime;
+        console.log(`❌ Praggo AI Key #${this.currentKeyIndex + 1} failed:`, error.message);
         
-        console.log(`❌ Praggo AI Key #${currentKey.keyIndex + 1} failed:`, error.message);
-
-        // Log failed usage
-        await this.logUsage(
-          userId, userRole, requestType, subject, false,
-          currentKey.keyName, error.message, processingTime, promptLength
-        );
-
         if (this.isQuotaError(error)) {
-          console.log(`🔄 Quota exceeded, rotating Praggo AI key...`);
-          await this.rotateToNextKey();
+          console.log(`🔄 Quota exceeded, rotating to next key...`);
+          if (!this.rotateToNextKey()) {
+            break; // No more keys available
+          }
           attempt++;
           continue;
         } else {
-          // Non-quota error, don't retry
+          // Non-quota error, don't retry with other keys
           break;
         }
       }
@@ -313,7 +155,7 @@ class PraggoAIService {
 
     // All keys exhausted or non-quota error
     let errorMessage = '';
-    if (lastError?.message?.includes('exhausted') || attempt >= this.apiKeys.length) {
+    if (lastError?.message?.includes('exhausted') || attempt >= this.maxRetries) {
       errorMessage = 'আজের জন্য আপনার Praggo AI ব্যবহারের সীমা শেষ! আগামীকাল আবার চেষ্টা করুন।';
     } else if (this.isQuotaError(lastError)) {
       errorMessage = 'Praggo AI এর সকল API key এর সীমা পূর্ণ! অনুগ্রহ করে কিছুক্ষণ পর চেষ্টা করুন।';
@@ -324,10 +166,172 @@ class PraggoAIService {
     throw new Error(errorMessage);
   }
 
-  // Generate questions with enhanced Bangladeshi context
+  // Get curriculum-specific instructions based on class level and subject
+  private getCurriculumSpecificInstructions(classLevel: string, subject: string): string {
+    // Class 6 curriculum instructions - STRICT SYLLABUS CONTROL
+    if (classLevel === '6') {
+      if (subject === 'science') {
+        return `🔬 **ষষ্ঠ শ্রেণির বিজ্ঞান অনুসন্ধানী পাঠ - NCTB কারিকুলাম ২০২৫:**
+⚠️ **STRICT SYLLABUS WARNING: শুধুমাত্র ৬ষ্ঠ শ্রেণির কারিকুলামের বিষয়বস্তু ব্যবহার করুন**
+
+**অধ্যায়সমূহ (NCTB ৬ষ্ঠ শ্রেণি):**
+১. বৈচিত্র্যময় জীবজগৎ - প্রাণী ও উদ্ভিদের বৈশিষ্ট্য
+২. পরিবেশ ও জীববৈচিত্র্য - পরিবেশের উপাদান, বাস্তুতন্ত্র
+৩. জীবের বৃদ্ধি ও বংশবৃদ্ধি - জীবচক্র, বংশবিস্তার
+৪. কৃষি ও খাদ্য উৎপাদন - ফসল, মাটি, সার
+৫. বায়ু ও পানি - গুণাগুণ, দূষণ, সংরক্ষণ
+৬. আকাশ পরিচিতি - সূর্য, চাঁদ, গ্রহ-নক্ষত্র
+
+**নিষিদ্ধ বিষয় (৬ষ্ঠ শ্রেণির বাইরে):**
+❌ রাসায়নিক সমীকরণ, অণু-পরমাণুর জটিল গঠন
+❌ কোষের অভ্যন্তরীণ অঙ্গাণু বিস্তারিত
+❌ জটিল পদার্থবিজ্ঞানের সূত্র ও গণনা`;
+      } else {
+        return `📊 **ষষ্ঠ শ্রেণির গণিত - NCTB কারিকুলাম ২০২৫:**
+⚠️ **STRICT SYLLABUS WARNING: শুধুমাত্র ৬ষ্ঠ শ্রেণির গণিত বিষয়বস্তু ব্যবহার করুন**
+
+**অধ্যায়সমূহ (NCTB ৬ষ্ঠ শ্রেণি):**
+১. প্রাকৃতিক সংখ্যা - সংখ্যারেখা, তুলনা, বিন্যাস
+২. ভগ্নাংশ - প্রকার, যোগ-বিয়োগ, গুণ-ভাগ
+৩. দশমিক ভগ্নাংশ - রূপান্তর, চার প্রক্রিয়া
+৪. অনুপাত ও সমানুপাত - প্রাথমিক ধারণা
+৫. শতকরা - প্রাথমিক হিসাব, দৈনন্দিন প্রয়োগ
+৬. জ্যামিতি - মৌলিক আকার, পরিমাপের একক
+৭. পরিসংখ্যান - তথ্য সংগ্রহ, সাজানো
+
+**নিষিদ্ধ বিষয় (৬ষ্ঠ শ্রেণির বাইরে):**
+❌ বীজগণিত, সূচক, বর্গমূল
+❌ জ্যামিতিক প্রমাণ, উপপাদ্য
+❌ ত্রিকোণমিতি, স্থানাঙ্ক জ্যামিতি`;
+      }
+    }
+    // Class 7 curriculum instructions - STRICT SYLLABUS CONTROL
+    else if (classLevel === '7') {
+      if (subject === 'science') {
+        return `🔬 **সপ্তম শ্রেণির বিজ্ঞান অনুসন্ধানী পাঠ - NCTB কারিকুলাম ২০২৫:**
+⚠️ **STRICT SYLLABUS WARNING: শুধুমাত্র ৭ম শ্রেণির কারিকুলামের বিষয়বস্তু ব্যবহার করুন**
+
+**অধ্যায়সমূহ (NCTB ৭ম শ্রেণি):**
+১. আমাদের পরিবেশ - জীব ও জড় উপাদানের মিথস্ক্রিয়া
+২. জীবের পরিচিতি ও শ্রেণিবিন্যাস - প্রাথমিক শ্রেণিবিভাগ
+৩. কোষ ও কোষের গঠন - প্রাথমিক কোষ গঠন
+৪. জীবে পুষ্টি - খাদ্য উপাদান, পুষ্টির প্রয়োজনীয়তা
+৫. জীবে শ্বসন ও স্বাস্থ্য - শ্বসনতন্ত্র, রোগপ্রতিরোধ
+৬. পদার্থ ও তার বৈশিষ্ট্য - কঠিন, তরল, বায়বীয়
+৭. শক্তি ও পরিবর্তন - গতি, তাপ, আলো, শব্দ (প্রাথমিক)
+
+**নিষিদ্ধ বিষয় (৭ম শ্রেণির বাইরে):**
+❌ জটিল রাসায়নিক বিক্রিয়া ও সমীকরণ
+❌ কোষের অভ্যন্তরীণ অঙ্গাণুর বিস্তারিত
+❌ উন্নত পদার্থবিজ্ঞানের সূত্র ও গণনা`;
+      } else {
+        return `📊 **সপ্তম শ্রেণির গণিত - NCTB কারিকুলাম ২০২৫:**
+⚠️ **STRICT SYLLABUS WARNING: শুধুমাত্র ৭ম শ্রেণির গণিত বিষয়বস্তু ব্যবহার করুন**
+
+**অধ্যায়সমূহ (NCTB ৭ম শ্রেণি):**
+১. মূলদ সংখ্যা - ধনাত্মক ও ঋণাত্মক সংখ্যা
+২. ভগ্নাংশ - মিশ্র ভগ্নাংশ, উন্নত চার প্রক্রিয়া
+৩. দশমিক ভগ্নাংশ - পৌনঃপুনিক দশমিক
+৪. শতকরা - লাভ-ক্ষতি, সুদের প্রাথমিক হিসাব
+৫. অনুপাত ও সমানুপাত - সরল ও যৌগিক অনুপাত
+৬. বীজগণিত পরিচিতি - প্রাথমিক বীজগাণিতিক রাশি
+৭. জ্যামিতি - কোণ, ত্রিভুজ, চতুর্ভুজের প্রাথমিক ধারণা
+৮. তথ্য ব্যবস্থাপনা - গড়, মধ্যক (প্রাথমিক)
+
+**নিষিদ্ধ বিষয় (৭ম শ্রেণির বাইরে):**
+❌ সূচক ও লগারিদম
+❌ জ্যামিতিক প্রমাণ ও উপপাদ্য
+❌ ত্রিকোণমিতি, বর্গসমীকরণ`;
+      }
+    }
+    // Class 8 curriculum instructions
+    else if (classLevel === '8') {
+      if (subject === 'science') {
+        return `🔬 **বিজ্ঞান অনুসন্ধানী পাঠ (Class ${classLevel}) - NCTB নির্দেশনা:**
+- পদার্থবিজ্ঞান: গতি, বল, সরল যন্ত্র, আলো, তাপ ও তাপমাত্রা
+- রসায়ন: পদার্থের বৈশিষ্ট্য, মিশ্রণ, অণু-পরমাণু, রাসায়নিক পরিবর্তন
+- জীববিজ্ঞান: জীবজগৎ, কোষ, উদ্ভিদ বৈশিষ্ট্য, সালোকসংশ্লেষণ, সংবেদি অঙ্গ
+- পৃথিবী ও পরিবেশ: পৃথিবীর উৎপত্তি, পরিবেশের ভারসাম্য, খাদ্য ও পুষ্টি
+- বাস্তব জীবনের উদাহরণ (বাংলাদেশী প্রেক্ষাপট: কৃষি, প্রকৃতি, স্বাস্থ্য)
+- সহজ ভাষায় বৈজ্ঞানিক ব্যাখ্যা ও পরীক্ষা-নিরীক্ষা`;
+      } else {
+        return `📊 **গণিত (Class ${classLevel}) - NCTB নির্দেশনা:**
+- সংখ্যা পদ্ধতি: প্রাকৃতিক সংখ্যা, ভগ্নাংশ, দশমিক
+- প্রাথমিক বীজগণিত: সরল সমীকরণ, বীজগাণিতিক রাশি
+- জ্যামিতি: মৌলিক আকার, পরিমাপ, ক্ষেত্রফল, আয়তন
+- পরিসংখ্যান: তথ্য সংগ্রহ, উপস্থাপনা, গড় নির্ণয়
+- ব্যবহারিক গণিত: অনুপাত, সমানুপাত, শতকরা, সুদ-আসল
+- ধাপে ধাপে সমাধান পদ্ধতি ও বাস্তব জীবনের প্রয়োগ`;
+      }
+    }
+    // Class 9-10 curriculum instructions  
+    else if (classLevel === '9-10' || classLevel === '9' || classLevel === '10') {
+      if (subject === 'science') {
+        return `🔬 **বিজ্ঞান (৯ম-১০ম শ্রেণি) - SSC NCTB নির্দেশনা:**
+- ফিজিক্স: বল ও গতি, কাজ শক্তি ক্ষমতা, তাপ, আলো, শব্দ, চুম্বকত্ব, স্থিতিশীল তড়িৎ
+- কেমিস্ট্রি: পদার্থের অবস্থা, পরমাণু, পর্যায় সারণী, অম্ল-ক্ষার, রাসায়নিক বিক্রিয়া
+- বায়োলজি: জীবকোষ, জীবপ্রক্রিয়া, বংশগতি, বিবর্তন, মানব দেহতত্ত্ব
+- SSC বোর্ড পরীক্ষার স্টাইল অনুসরণ
+- সূত্র প্রয়োগ, গণনা ও তত্ত্বীয় ব্যাখ্যার সমন্বয়`;
+      } else if (subject === 'general_math') {
+        return `📊 **সাধারণ গণিত (৯ম-১০ম শ্রেণি) - SSC NCTB নির্দেশনা:**
+- বাস্তব সংখ্যা, সেট ও ফাংশন, বীজগাণিতিক রাশি
+- সূচক ও লগারিদম, সমীকরণ সমাধান
+- জ্যামিতি: রেখা, কোণ, ত্রিভুজ, বৃত্ত, ক্ষেত্রফল
+- ত্রিকোণমিতি, দূরত্ব ও উচ্চতা, পরিমিতি
+- পরিসংখ্যান ও বাস্তব জীবনের সমস্যা সমাধান`;
+      } else if (subject === 'higher_math') {
+        return `🔺 **উচ্চতর গণিত (৯ম-১০ম শ্রেণি) - SSC NCTB নির্দেশনা:**
+- সেট ও ফাংশন, বীজগাণিতিক রাশি, জ্যামিতিক অঙ্কন
+- সমীকরণ ও অসমতা, অসীম ধারা, ত্রিকোণমিতি
+- সূচকীয় ও লগারিদমীয় ফাংশন, দ্বিপদী বিস্তৃতি
+- স্থানাঙ্ক জ্যামিতি, সমতলীয় ভেক্টর, ত্রিমাত্রিক জ্যামিতি
+- উচ্চতর গাণিতিক চিন্তাভাবনা ও সূত্রের প্রমাণ`;
+      }
+    }
+    // Class 11-12 curriculum instructions (HSC)
+    else if (classLevel === '11-12' || classLevel === '11' || classLevel === '12') {
+      if (subject === 'physics') {
+        return `⚡ **পদার্থবিজ্ঞান (একাদশ-দ্বাদশ শ্রেণি) - HSC NCTB নির্দেশনা:**
+- যন্ত্রবিদ্যা: গতিবিদ্যা, স্থিতিবিদ্যা, কম্পন ও তরঙ্গ
+- তাপ ও ঠার্মোডায়নামিক্স: তাপীয় ধর্ম, গ্যাসের আচরণ
+- আলোকবিদ্যা: জ্যামিতিক আলোকবিদ্যা, তরঙ্গ আলোকবিদ্যা
+- তড়িৎ ও চুম্বকত্ব: তড়িৎ ক্ষেত্র, চৌম্বক ক্ষেত্র, প্রবাহ
+- আধুনিক পদার্থবিদ্যা: পারমাণবিক পদার্থবিদ্যা, তেজস্ক্রিয়তা`;
+      } else if (subject === 'chemistry') {
+        return `🧪 **রসায়ন (একাদশ-দ্বাদশ শ্রেণি) - HSC NCTB নির্দেশনা:**
+- পদার্থের গঠন: পরমাণু, অণু, রাসায়নিক বন্ধন
+- পদার্থের অবস্থা: গ্যাস, তরল, কঠিন পদার্থের ধর্ম
+- রাসায়নিক বিক্রিয়া: অজৈব রসায়ন, জৈব রসায়ন
+- সমাধান রসায়ন: দ্রবণ, তড়িৎ বিশ্লেষণ
+- পরিবেশ রসায়ন: দূষণ, সবুজ রসায়ন`;
+      } else if (subject === 'biology') {
+        return `🧬 **জীববিজ্ঞান (একাদশ-দ্বাদশ শ্রেণি) - HSC NCTB নির্দেশনা:**
+- কোষবিদ্যা: কোষের গঠন ও কার্যাবলী, কোষ বিভাজন
+- টিস্যু ও অঙ্গতন্ত্র: উদ্ভিদ ও প্রাণীর টিস্যু
+- শ্বসন ও সালোকসংশ্লেষণ: শক্তি রূপান্তর প্রক্রিয়া
+- বংশগতি ও বিবর্তন: DNA, RNA, বংশগতির সূত্র
+- জীব প্রযুক্তি: জেনেটিক ইঞ্জিনিয়ারিং, বায়োটেকনোলজি`;
+      } else if (subject === 'higher_math') {
+        return `📐 **উচ্চতর গণিত (একাদশ-দ্বাদশ শ্রেণি) - HSC NCTB নির্দেশনা:**
+- ম্যাট্রিক্স ও নির্ণায়ক: ম্যাট্রিক্স বীজগণিত, সমীকরণ সমাধান
+- ভেক্টর: দ্বিমাত্রিক ও ত্রিমাত্রিক ভেক্টর, ভেক্টর বীজগণিত
+- জটিল সংখ্যা: জটিল সমতল, ধ্রুবক ও চল
+- ক্যালকুলাস: অন্তরীকরণ, সমাকলন, প্রয়োগ
+- সম্ভাব্যতা ও পরিসংখ্যান: বিতরণ, পরীক্ষণ`;
+      }
+    }
+    
+    // Default fallback
+    return `📚 **${subject} বিষয়ক নির্দেশনা:**
+- NCTB কারিকুলাম অনুসরণ করুন
+- বাংলাদেশের প্রেক্ষাপটে উদাহরণ দিন
+- ধাপে ধাপে সমাধান প্রদান করুন`;
+  }
+
+  // Generate questions with enhanced Bangladeshi context and 5-key rotation
   async generateQuestions(
     subject: string,
-    examType: string,
     classLevel: string,
     chapter: string,
     questionType: string,
@@ -338,26 +342,34 @@ class PraggoAIService {
     userRole: 'teacher' | 'student'
   ): Promise<any> {
     
-    if (this.apiKeys.length === 0) {
-      // Return sample questions if no API key
-      console.warn('⚠️ No Praggo AI keys configured, returning sample questions');
-      const sampleQuestions = [];
-      for (let i = 0; i < count; i++) {
-        sampleQuestions.push({
-          questionText: `নমুনা ${subject === 'chemistry' ? 'রসায়ন' : 'ICT'} প্রশ্ন ${i + 1} - ${chapter} (${difficulty} স্তর)`,
-          questionType: questionType,
-          options: questionType === 'mcq' ? ['বিকল্প ক', 'বিকল্প খ', 'বিকল্প গ', 'বিকল্প ঘ'] : null,
-          correctAnswer: questionType === 'mcq' ? 'বিকল্প ক' : null,
-          answer: 'Praggo AI সঠিক উত্তর এখানে প্রদান করবে। sir এর সাথে যোগাযোগ করুন।',
-          marks: questionType === 'creative' ? 10 : questionType === 'cq' ? 2 : 1
-        });
-      }
-      return sampleQuestions;
+    // Check if at least one key is configured
+    if (!this.getCurrentKey()) {
+      throw new Error('PraggoAI API Keys কনফিগার করা হয়নি। API_KEYS array-তে valid keys যোগ করুন।');
     }
 
-    const subjectBangla = subject === 'chemistry' ? 'রসায়ন' : 'তথ্য ও যোগাযোগ প্রযুক্তি';
-    const examTypeBangla = examType === 'academic' ? 'একাডেমিক' : 'ভর্তি পরীক্ষা';
-    const classLevelBangla = classLevel === '9-10' ? 'নবম-দশম শ্রেণি' : 'একাদশ-দ্বাদশ শ্রেণি (HSC)';
+    // Get Bangla subject name with proper classification
+    let subjectBangla = '';
+    if (classLevel === '6' || classLevel === '7' || classLevel === '8') {
+      subjectBangla = subject === 'science' ? 'বিজ্ঞান অনুসন্ধানী পাঠ' : 'গণিত';
+    } else if (classLevel === '9-10') {
+      if (subject === 'general_math') {
+        subjectBangla = 'সাধারণ গণিত';
+      } else if (subject === 'higher_math') {
+        subjectBangla = 'উচ্চতর গণিত';
+      } else {
+        subjectBangla = 'বিজ্ঞান';
+      }
+    }
+    
+    // Get class level in Bangla
+    let classLevelBangla = '';
+    switch (classLevel) {
+      case '6': classLevelBangla = 'ষষ্ঠ শ্রেণি'; break;
+      case '7': classLevelBangla = 'সপ্তম শ্রেণি'; break;
+      case '8': classLevelBangla = 'অষ্টম শ্রেণি'; break;
+      case '9-10': classLevelBangla = 'নবম-দশম শ্রেণি'; break;
+      default: classLevelBangla = classLevel;
+    }
     
     let difficultyLevels = '';
     if (difficulty === 'mixed') {
@@ -380,24 +392,42 @@ class PraggoAIService {
       questionCategoryDescription = 'মিশ্র প্রশ্ন - গণিত ও তত্ত্ব উভয় ধরনের';
     }
 
-    // Enhanced Bangladeshi context prompt
-    const prompt = `আপনি "Praggo AI" - বাংলাদেশের শিক্ষার জন্য বিশেষভাবে ডিজাইন করা একটি AI শিক্ষা সহায়ক।
+    // Enhanced Bangladeshi context prompt with NCTB curriculum
+    const curriculumInstructions = this.getCurriculumSpecificInstructions(classLevel, subject);
+    
+  const prompt = `আপনি "Praggo AI" - বাংলাদেশের NCTB ভিত্তিক স্মার্ট শিক্ষা সহায়ক।
 
-🏆 Chemistry & ICT Care by Belal Sir কোচিং সেন্টারের জন্য ${count}টি ${difficultyLevels} ${subjectBangla} প্রশ্ন তৈরি করুন।
+🏆 Science & Math Care প্ল্যাটফর্মের জন্য ${count}টি ${difficultyLevels} ${subjectBangla} প্রশ্ন তৈরি করুন।
 
-🎯 **NEXT LEVEL BANGLADESHI ACADEMIC SYSTEM**
-আপনি একজন ২০+ বছরের অভিজ্ঞ ${subjectBangla} বিশেষজ্ঞ শিক্ষক যিনি বাংলাদেশের শীর্ষ বিশ্ববিদ্যালয়ের ভর্তি পরীক্ষায় প্রশ্ন প্রণয়ন করেন।
+🎯 **BANGLADESH NCTB CURRICULUM FOCUS**
+আপনি একজন ১৫+ বছরের অভিজ্ঞ ${subjectBangla} বিশেষজ্ঞ শিক্ষক যিনি NCTB কারিকুলাম এবং বাংলাদেশের শিক্ষাব্যবস্থায় দক্ষ।
 
 📚 প্রশ্নের বিবরণ:
 - বিষয়: ${subjectBangla} (${subject})
-- পরীক্ষার ধরন: ${examTypeBangla}
 - শ্রেণি: ${classLevelBangla}
 - অধ্যায়/টপিক: ${chapter}
 - প্রশ্নের ধরন: ${questionType}
 - প্রশ্নের বিষয়বস্তু: ${questionCategoryDescription}
 - কঠিনতার স্তর: ${difficultyLevels}
 
-🇧🇩 NCTB কারিকুলাম ও বাংলাদেশের শিক্ষাব্যবস্থা অনুযায়ী:
+🇧🇩 NCTB কারিকুলাম ও বাংলাদেশের বাস্তব শিক্ষাব্যবস্থা অনুযায়ী:
+
+${curriculumInstructions}
+
+${(classLevel === '6' || classLevel === '7') ? `
+🚨 **CRITICAL SYLLABUS COMPLIANCE FOR CLASS ${classLevel}:**
+- প্রশ্ন তৈরির আগে অবশ্যই নিশ্চিত করুন যে সমস্ত বিষয়বস্তু ${classLevel === '6' ? 'ষষ্ঠ' : 'সপ্তম'} শ্রেণির NCTB কারিকুলামের অন্তর্ভুক্ত
+- উপরে উল্লেখিত নিষিদ্ধ বিষয়গুলো কোনোভাবেই প্রশ্নে আনবেন না
+- প্রতিটি প্রশ্ন শিক্ষার্থীর বয়স ও জ্ঞানের স্তর অনুযায়ী হতে হবে
+- জটিল ধারণা এড়িয়ে সহজ ও বোধগম্য ভাষায় প্রশ্ন তৈরি করুন
+- শুধুমাত্র ${classLevel === '6' ? 'ষষ্ঠ' : 'সপ্তম'} শ্রেণির পাঠ্যবইয়ে থাকা বিষয়বস্তু ব্যবহার করুন` : ''}
+
+🎯 **উত্তরে অবশ্যই যা থাকতে হবে:**
+- সঠিক উত্তরের সম্পূর্ণ ব্যাখ্যা ও যুক্তি
+- ধাপে ধাপে সমাধান প্রক্রিয়া (গণিত/বিজ্ঞানের জন্য)
+- বাস্তব জীবনের সাথে সম্পর্ক বা প্রয়োগ
+- সাধারণ ভুল ও সেগুলো এড়ানোর উপায়
+- অতিরিক্ত টিপস ও মনে রাখার কৌশল
 
 ${questionCategory === 'math-based' ? `🧮 **গণিত ভিত্তিক প্রশ্ন তৈরির বিশেষ নির্দেশনা:**
 - সূত্র প্রয়োগ ভিত্তিক প্রশ্ন তৈরি করুন
@@ -417,25 +447,47 @@ ${questionCategory === 'math-based' ? `🧮 **গণিত ভিত্তিক
 - তাত্ত্বিক জ্ঞানের সাথে ব্যবহারিক প্রয়োগ
 - সূত্র ব্যাখ্যা এবং তার প্রয়োগ উভয়ই`}
 
-${subject === 'chemistry' ? `🧪 রসায়নের জন্য বিশেষ নির্দেশনা:
-- বাংলাদেশের NCTB পাঠ্যবই অনুযায়ী
-- রাসায়নিক সূত্র ও বিক্রিয়া বাংলায়
-- দৈনন্দিন জীবনের সাথে সম্পর্কিত উদাহরণ
-- HSC/SSC বোর্ড প্রশ্নের ধারা অনুসরণ
-- বাংলাদেশী প্রেক্ষাপটের উদাহরণ` : `💻 ICT এর জন্য বিশেষ নির্দেশনা:
-- বাংলাদেশের ডিজিটাল যুগের প্রেক্ষাপট
-- প্রোগ্রামিং, ডেটাবেস, নেটওয়ার্ক
-- ব্যবহারিক সমস্যা ও সমাধান
-- বাংলাদেশের প্রযুক্তি খাতের উদাহরণ
-- HSC ICT বোর্ড সিলেবাস অনুযায়ী`}
+${subject === 'science' ? `🔬 বিজ্ঞান (ফিজিক্স + কেমিস্ট্রি + বায়োলজি ভিত্তিক) নির্দেশনা:
+- পদার্থ, শক্তি, জীববিজ্ঞান ও পরিবেশের সমন্বয়
+- বাস্তব জীবনের উদাহরণ (বাংলাদেশ কেন্দ্রিক: কৃষি, জলবায়ু, স্বাস্থ্য)
+- প্রয়োজনীয় ক্ষেত্রে সূত্র, রাসায়নিক সমীকরণ, চিত্র বর্ণনা টেক্সটে
+- এসএসসি / এইচএসসি বোর্ড প্রশ্নের স্টাইল অনুসরণ
+- বিভ্রান্তিকর অপশন (MCQ) তৈরি করুন` : `➗ গণিতের জন্য নির্দেশনা:
+- মৌলিক থেকে উচ্চতর ধারণা (অ্যালজেব্রা, জ্যামিতি, ত্রিকোণমিতি, ক্যালকুলাস - শ্রেণি অনুযায়ী)
+- ধাপে ধাপে সমাধান (Step-by-step solution)
+- সূত্রের ব্যবহার ও রূপান্তর
+- বাস্তব জীবনের প্রয়োগ (আর্থিক গণিত, জ্যামিতিক পরিমাপ, তথ্য বিশ্লেষণ)
+- কঠিন প্রশ্নে ইঙ্গিত (hint) সংযুক্ত করুন`}
 
-📋 JSON ফরম্যাট (বাংলায় উত্তর):
+📋 JSON ফরম্যাট (বাংলায় উত্তর ও ব্যাখ্যা):
 ${questionType === 'mcq' ? 'MCQ ফরম্যাট:' : questionType === 'cq' ? 'CQ ফরম্যাট:' : 'সৃজনশীল প্রশ্ন ফরম্যাট:'}
-[{"questionText": "বাংলায় প্রশ্ন", "questionType": "${questionType}", ${questionType === 'mcq' ? '"options": ["ক) ...", "খ) ...", "গ) ...", "ঘ) ..."], "correctAnswer": "ক) ...",' : '"options": null, "correctAnswer": null,'} "answer": "বাংলায় বিস্তারিত উত্তর", "marks": ${questionType === 'creative' ? '10' : questionType === 'cq' ? '2' : '1'}}]`;
+
+⚠️ **প্রতিটি প্রশ্নের উত্তরে অবশ্যই বিস্তারিত ব্যাখ্যা থাকতে হবে:**
+- সঠিক উত্তর কেন সঠিক তার কারণ
+- ভুল অপশনগুলো কেন ভুল (MCQ এর ক্ষেত্রে)
+- সূত্র প্রয়োগের ধাপসমূহ (গণিত/বিজ্ঞানের ক্ষেত্রে)
+- বাস্তব জীবনের সাথে সম্পর্ক
+- অতিরিক্ত টিপস ও সতর্কতা
+
+🎯 **CRITICAL EXPLANATION REQUIREMENTS:**
+${questionCategory === 'math-based' || subject === 'math' || subject === 'general_math' || subject === 'higher_math' ? `
+📊 **গণিত প্রশ্নের জন্য MANDATORY SOLVE SECTION:**
+- "সমাধান:" দিয়ে শুরু করুন
+- ধাপ ১, ধাপ ২, ধাপ ৩... এভাবে সমাধান লিখুন
+- প্রতিটি ধাপে কোন সূত্র/নিয়ম ব্যবহার করা হলো তা স্পষ্ট করুন
+- গণনার প্রতিটি পদক্ষেপ দেখান
+- শেষে "∴ উত্তর: [ফলাফল]" লিখুন` : `
+🔬 **বিজ্ঞান প্রশ্নের জন্য MANDATORY EXPLANATION:**
+- "ব্যাখ্যা:" দিয়ে শুরু করুন
+- বৈজ্ঞানিক ধারণা ও নীতি ব্যাখ্যা করুন
+- প্রয়োজনে সূত্র, বিক্রিয়া বা প্রক্রিয়া বর্ণনা করুন
+- কেন অন্য অপশনগুলো ভুল তা ব্যাখ্যা করুন`}
+
+[{"questionText": "বাংলায় প্রশ্ন", "questionType": "${questionType}", ${questionType === 'mcq' ? '"options": ["ক) ...", "খ) ...", "গ) ...", "ঘ) ..."], "correctAnswer": "ক) ...",' : '"options": null, "correctAnswer": null,'} "answer": "সঠিক উত্তর: [উত্তর]\\n\\n${questionCategory === 'math-based' || subject === 'math' || subject === 'general_math' || subject === 'higher_math' ? 'সমাধান:\\nধাপ ১: [প্রথম ধাপ]\\nধাপ ২: [দ্বিতীয় ধাপ]\\n...\\n∴ উত্তর: [ফলাফল]' : 'ব্যাখ্যা: [বিস্তারিত বৈজ্ঞানিক ব্যাখ্যা]'}\\n\\nভুল অপশনগুলোর ব্যাখ্যা: [কেন অন্যগুলো ভুল]\\nবাস্তব জীবনের সাথে সম্পর্ক: [প্রায়োগিক উদাহরণ]\\nঅতিরিক্ত টিপস: [মনে রাখার কৌশল ও সতর্কতা]", "marks": ${questionType === 'creative' ? '10' : questionType === 'cq' ? '2' : '1'}}]`;
 
     try {
-      const content = await this.makeAPICall(
-        prompt, userId, userRole, 'generate_questions', subject as 'chemistry' | 'ict'
+        const content = await this.makeAPICall(
+        prompt, userId, userRole, 'generate_questions', subject as 'science' | 'math'
       );
       
       console.log("Praggo AI response for Bangladesh questions:", content);
@@ -467,7 +519,7 @@ ${questionType === 'mcq' ? 'MCQ ফরম্যাট:' : questionType === 'cq' 
     }
   }
 
-  // Solve student doubts with NCTB context
+  // Solve student doubts with NCTB context and 5-key rotation
   async solveDoubt(
     question: string,
     subject: string,
@@ -475,15 +527,15 @@ ${questionType === 'mcq' ? 'MCQ ফরম্যাট:' : questionType === 'cq' 
     userRole: 'student'
   ): Promise<string> {
     
-    if (this.apiKeys.length === 0) {
-      return `🤖 Praggo AI সমাধান (ডেমো মোড)\n\nআপনার ${subject === 'chemistry' ? 'রসায়ন' : 'ICT'} প্রশ্ন: "${question}"\n\nএটি Praggo AI দ্বারা প্রদত্ত বিস্তারিত ব্যাখ্যা হবে। সঠিক AI সমাধান পেতে sir এর সাথে যোগাযোগ করুন।`;
+    if (!this.getCurrentKey()) {
+      return `🤖 Praggo AI সমাধান (কী নেই)\n\nআপনার ${subject === 'science' ? 'বিজ্ঞান' : 'গণিত'} প্রশ্ন: "${question}"\n\nAPI keys কনফিগার করা হয়নি।`;
     }
 
-    const subjectBangla = subject === 'chemistry' ? 'রসায়ন' : 'তথ্য ও যোগাযোগ প্রযুক্তি';
+    const subjectBangla = subject === 'science' ? 'বিজ্ঞান' : 'গণিত';
 
     const prompt = `আপনি "Praggo AI" - বাংলাদেশের শিক্ষার জন্য বিশেষভাবে তৈরি একটি AI শিক্ষা সহায়ক।
 
-🎓 Chemistry & ICT Care by Belal Sir কোচিং সেন্টারের একজন বিশেষজ্ঞ ${subjectBangla} শিক্ষক হিসেবে উত্তর দিন।
+🎓 Science & Math Care প্ল্যাটফর্মের একজন বিশেষজ্ঞ ${subjectBangla} শিক্ষক হিসেবে উত্তর দিন।
 
 📝 শিক্ষার্থীর প্রশ্ন: ${question}
 
@@ -493,31 +545,30 @@ ${questionType === 'mcq' ? 'MCQ ফরম্যাট:' : questionType === 'cq' 
 🏆 ঢাবি/বুয়েট/মেডিকেল ভর্তি পরীক্ষার মান বজায় রেখে
 🎯 বাংলাদেশের সাংস্কৃতিক ও ভৌগোলিক প্রেক্ষাপটে সমাধান
 
-${subject === 'chemistry' ? `🧪 রসায়নের জন্য:
-- ধাপে ধাপে সমাধান সহ রাসায়নিক সমীকরণ
-- আণবিক সূত্র ও কাঠামো চিত্র (টেক্সট ফরম্যাটে)
-- বাংলাদেশের দৈনন্দিন জীবনের উদাহরণ
-- HSC/SSC বোর্ড পরীক্ষার প্রেক্ষাপটে ব্যাখ্যা
-- নিরাপত্তা ও পরিবেশগত বিষয়াবলী
-- অতিরিক্ত অনুশীলন প্রশ্নের পরামর্শ` : `💻 ICT এর জন্য:
-- ব্যবহারিক কোড উদাহরণ (যদি প্রয়োজন হয়)
-- প্রযুক্তিগত ধারণার সহজ ব্যাখ্যা
-- বাংলাদেশের প্রযুক্তি খাতের বাস্তব প্রয়োগ
-- HSC ICT সিলেবাস অনুযায়ী বিশদ বর্ণনা
-- ভবিষ্যৎ ক্যারিয়ার সংযোগ
-- অনুশীলনের জন্য আরও রিসোর্স`}
+${subject === 'science' ? `🔬 বিজ্ঞান সমাধানের জন্য:
+- ধারণা ব্যাখ্যা → সূত্র/নিয়ম → প্রয়োগ
+- প্রয়োজনে রাসায়নিক বিক্রিয়া, জৈব প্রক্রিয়া, পদার্থবিজ্ঞানের সূত্র
+- বাংলাদেশের প্রেক্ষাপটে উদাহরণ দিন
+- অতিরিক্ত অনুশীলনের জন্য ১-২টি ছোট প্রশ্ন প্রস্তাব করুন` : `➗ গণিত সমাধানের জন্য:
+- ধাপে ধাপে (Step-by-step) ব্যাখ্যা
+- কোথায় কোন সূত্র ব্যবহৃত হলো তা উল্লেখ
+- বিকল্প পদ্ধতি থাকলে সংক্ষেপে বলুন
+- সাধারণ ভুল (Common mistakes) উল্লেখ করুন
+- শেষে সংক্ষিপ্ত পুনরালোচনা দিন`}
 
 ✨ উত্তরটি অবশ্যই:
 - সহজ ও বোধগম্য বাংলায় লিখুন
-- ধাপে ধাপে ব্যাখ্যা করুন
+- ধাপে ধাপে বিস্তারিত ব্যাখ্যা করুন (Why & How)
 - বাংলাদেশী শিক্ষার্থীদের জন্য প্রাসঙ্গিক উদাহরণ দিন
 - উৎসাহমূলক ও শিক্ষণীয় টোন ব্যবহার করুন
+- সূত্র বা নিয়ম প্রয়োগের প্রক্রিয়া স্পষ্ট করুন
+- সাধারণ ভুলত্রুটি ও এড়ানোর উপায় উল্লেখ করুন
 
 🎯 Praggo AI সমাধান:`;
 
     try {
       const result = await this.makeAPICall(
-        prompt, userId, userRole, 'solve_doubt', subject as 'chemistry' | 'ict'
+        prompt, userId, userRole, 'solve_doubt', subject as 'science' | 'math'
       );
       
       return result;
@@ -529,35 +580,15 @@ ${subject === 'chemistry' ? `🧪 রসায়নের জন্য:
 
   // Get API usage statistics
   async getUsageStats(userId: string): Promise<any> {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const usage = await db.select()
-        .from(praggoAIUsage)
-        .where(
-          and(
-            eq(praggoAIUsage.userId, userId),
-            sql`${praggoAIUsage.createdAt} >= ${today}`
-          )
-        );
-        
-      return {
-        todayUsage: usage.length,
-        successfulCalls: usage.filter(u => u.success).length,
-        failedCalls: usage.filter(u => !u.success).length,
-        questionsGenerated: usage.filter(u => u.requestType === 'generate_questions').length,
-        doubtsResolved: usage.filter(u => u.requestType === 'solve_doubt').length
-      };
-    } catch (error) {
-      return {
-        todayUsage: 0,
-        successfulCalls: 0,
-        failedCalls: 0,
-        questionsGenerated: 0,
-        doubtsResolved: 0
-      };
-    }
+    // Usage stats disabled without database
+    return {
+      todayUsage: 0,
+      successfulCalls: 0,
+      failedCalls: 0,
+      questionsGenerated: 0,
+      doubtsResolved: 0,
+      trackingDisabled: true
+    };
   }
 }
 

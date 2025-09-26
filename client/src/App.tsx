@@ -1,9 +1,12 @@
 import { Switch, Route } from "wouter";
+import StudentAISolver from './pages/student/StudentAISolver';
+import AITestPage from './pages/AITestPage';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { setupMockApi } from "@/lib/mockApi";
 import Landing from "@/pages/Landing";
 import LoginPage from "@/pages/LoginPage";
 import TeacherDashboard from "@/pages/TeacherDashboard";
@@ -20,20 +23,22 @@ import Students from "@/pages/teacher/Students";
 import SMS from "@/pages/teacher/SMS";
 import TeacherMessaging from "@/pages/teacher/Messaging";
 import Exams from "@/pages/teacher/Exams";
+import ExamGrading from "@/pages/teacher/ExamGrading";
 import Quest from "@/pages/teacher/Quest";
-import Reports from "@/pages/teacher/Reports";
 import Attendance from "@/pages/teacher/Attendance";
 import APISettings from "@/pages/teacher/APISettings";
+import FeeCollection from "@/pages/FeeCollection";
 
 // Student feature pages
 import StudentHome from "@/pages/student/StudentHome";
 import StudentAIHelp from "@/pages/student/StudentAIHelp";
+
 import StudentExams from "@/pages/student/StudentExams";
 import StudentQuest from "@/pages/student/StudentQuest";
-import StudentReports from "@/pages/student/StudentReports";
 import StudentMessages from "@/pages/student/StudentMessages";
 import StudentStudy from "@/pages/student/StudentStudy";
 import StudentExamView from "@/pages/student/StudentExamView";
+import RegularExamView from "@/pages/student/RegularExamView";
 import StudentResults from "@/pages/student/StudentResults";
 import StudentQuestionBank from "@/pages/student/QuestionBank";
 import StudentAttendance from "@/pages/student/StudentAttendance";
@@ -43,7 +48,11 @@ import TeacherCourseManagement from "@/pages/teacher/TeacherCourseManagement";
 import TeacherProfileManagement from "@/pages/teacher/TeacherProfileManagement";
 import SMSBilling from "@/pages/teacher/SMSBilling";
 import SMSBalance from "@/pages/teacher/SMSBalance";
+import SMSManagement from "@/pages/teacher/SMSManagement";
 import TeacherMessages from "@/pages/teacher/TeacherMessages";
+import MonthlyResultsManagement from "@/components/MonthlyResultsManagement";
+import StudentMonthlyResults from "@/components/StudentMonthlyResults";
+import Rankings from "@/pages/Rankings";
 
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -89,13 +98,18 @@ function Router() {
               <Route path="/teacher/ai-questions" component={AIQuestions} />
               <Route path="/teacher/students" component={Students} />
               <Route path="/teacher/sms" component={SMS} />
-              <Route path="/teacher/sms-billing" component={SMSBilling} />
               <Route path="/teacher/sms-balance" component={SMSBalance} />
+              <Route path="/teacher/sms-billing" component={SMSBilling} />
+              <Route path="/teacher/sms-management" component={SMSManagement} />
               <Route path="/teacher/messages" component={TeacherMessages} />
               <Route path="/teacher/messaging" component={TeacherMessaging} />
               <Route path="/teacher/exams" component={Exams} />
+              <Route path="/teacher/exam-grading" component={ExamGrading} />
+              <Route path="/exam-management" component={ExamManagement} />
               <Route path="/teacher/quest" component={Quest} />
-              <Route path="/teacher/reports" component={Reports} />
+              <Route path="/teacher/monthly-results" component={MonthlyResultsManagement} />
+              <Route path="/teacher/rankings" component={Rankings} />
+              <Route path="/teacher/fees" component={FeeCollection} />
               <Route path="/teacher/api-settings" component={APISettings} />
               <Route path="/teacher/question-bank" component={TeacherQuestionBank} />
               <Route path="/courses" component={TeacherCourseManagement} />
@@ -119,16 +133,19 @@ function Router() {
             <>
               <Route path="/student" component={StudentHome} />
               <Route path="/student/ai-help" component={StudentAIHelp} />
+              <Route path="/student/ai-questions" component={StudentAISolver} />
+              <Route path="/ai-test" component={AITestPage} />
               <Route path="/student/exams" component={StudentExams} />
               <Route path="/student/quest" component={StudentQuest} />
-              <Route path="/student/reports" component={StudentReports} />
               <Route path="/student/messages" component={StudentMessages} />
               <Route path="/student/study" component={StudentStudy} />
               <Route path="/student/exam/:examId/view" component={StudentExamView} />
+              <Route path="/student/regular-exam/:examId" component={RegularExamView} />
               <Route path="/student/results/:examId" component={StudentResults} />
               <Route path="/student/question-bank" component={StudentQuestionBank} />
               <Route path="/student/attendance" component={StudentAttendance} />
               <Route path="/student/developer" component={StudentDeveloper} />
+              <Route path="/student/monthly-results" component={StudentMonthlyResults} />
               <Route path="/attendance" component={Attendance} />
               <Route path="/messages" component={Messages} />
               <Route path="/notices" component={NoticeBoard} />
@@ -144,6 +161,11 @@ function Router() {
 }
 
 function App() {
+  // Setup mock API for development testing
+  if (process.env.NODE_ENV === 'development') {
+    setupMockApi();
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

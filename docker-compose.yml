@@ -1,24 +1,24 @@
-# Docker Compose for Chemistry & ICT Care by Belal Sir
-# Alternative deployment option for VPS with Docker
+# Docker Compose for CoachManager System - Local Development
+# Modern Education Platform for Classes 6-10
 
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database for Local Development
   postgres:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: chemistry_ict_care
-      POSTGRES_USER: chemistry_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_123}
+      POSTGRES_DB: coachmanager
+      POSTGRES_USER: rahman
+      POSTGRES_PASSWORD: rahman
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./coachdb_2025-09-08.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U chemistry_user -d chemistry_ict_care"]
+      test: ["CMD-SHELL", "pg_isready -U rahman -d coachmanager"]
       interval: 30s
       timeout: 10s
       retries: 3

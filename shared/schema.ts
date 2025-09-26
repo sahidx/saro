@@ -10,6 +10,9 @@ import {
   integer,
   boolean,
   pgEnum,
+  serial,
+  decimal,
+  time,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -31,11 +34,51 @@ export const userRoleEnum = pgEnum('user_role', ['teacher', 'student', 'super_us
 // Payment status enum
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'completed', 'failed', 'cancelled']);
 
-// Subject enum - Chemistry and ICT only
-export const subjectEnum = pgEnum('subject', ['chemistry', 'ict']);
+// Academic Calendar - Daily calendar management for attendance tracking
+export const academicCalendar = pgTable("academic_calendar", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: timestamp("date").notNull(), // Specific date (YYYY-MM-DD)
+  year: integer("year").notNull(),
+  month: integer("month").notNull(), // 1-12
+  dayOfWeek: integer("day_of_week").notNull(), // 0=Sunday, 1=Monday, etc.
+  isWorkingDay: boolean("is_working_day").notNull().default(true), // Working day or holiday
+  dayType: varchar("day_type").default('regular'), // regular, holiday, exam_day, etc.
+  notes: text("notes"), // Optional notes for the day (holiday reason, etc.)
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Monthly calendar summary for quick calculations
+export const monthlyCalendarSummary = pgTable("monthly_calendar_summary", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(), // 1-12
+  totalDays: integer("total_days").notNull(), // Total days in month
+  workingDays: integer("working_days").notNull(), // Calculated working days
+  holidays: integer("holidays").notNull().default(0), // Holiday count
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Subject enum - Re-aligned to NCTB core subjects (science, math)
+// NOTE: Previously used subjects included 'chemistry' and 'ict'. These are now mapped to 'science'.
+export const subjectEnum = pgEnum('subject', ['science', 'math']);
+
+// Attendance status enum for three-state system
+export const attendanceStatusEnum = pgEnum("attendance_status", [
+  "present",    // Full attendance credit (20%) + bonus credit (10%)
+  "excused",    // No attendance credit but gets bonus credit (10%) 
+  "absent"      // No credit for attendance or bonus (0%)
+]);
 
 // SMS type enum
 export const smsTypeEnum = pgEnum('sms_type', ['attendance', 'exam_result', 'exam_notification', 'notice', 'reminder']);
+
+// SMS template system enums
+export const triggerTypeEnum = pgEnum('trigger_type', ['monthly_exam', 'attendance_reminder', 'exam_notification', 'custom_schedule']);
+export const targetAudienceEnum = pgEnum('target_audience', ['students', 'parents', 'both']);
+export const executionStatusEnum = pgEnum('execution_status', ['pending', 'in_progress', 'completed', 'failed']);
 
 // Note type enum for note sharing feature
 export const noteTypeEnum = pgEnum('note_type', ['pdf', 'google_drive', 'link', 'text']);
@@ -118,17 +161,20 @@ export const users = pgTable("users", {
 export const exams = pgTable("exams", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: varchar("title").notNull(),
-  subject: subjectEnum("subject").notNull(), // Chemistry or ICT
+  subject: subjectEnum("subject").notNull(), // Science or Math
+  chapter: varchar("chapter"), // Chapter name (optional)
+  targetClass: varchar("target_class"), // 6, 7, 8, 9, 10
   description: text("description"),
   instructions: text("instructions"),
-  examDate: timestamp("exam_date").notNull(),
+  examDate: timestamp("exam_date"), // Optional for regular exams
   duration: integer("duration").notNull(), // in minutes
   examType: varchar("exam_type").notNull(), // mcq, written, mixed
-  examMode: varchar("exam_mode").notNull(), // online, offline
+  examMode: varchar("exam_mode").notNull(), // online, offline (regular)
   batchId: varchar("batch_id").references(() => batches.id),
   targetStudents: jsonb("target_students"), // Array of student IDs for specific targeting
-  questionSource: varchar("question_source").notNull(), // drive_link, file_upload  
-  questionContent: text("question_content"), // Google Drive link or base64 file data (PNG/JPG/PDF)
+  questionSource: varchar("question_source"), // drive_link, file_upload (for online exams)
+  questionContent: text("question_content"), // Google Drive link or base64 file data (for online exams)
+  questionPaperImage: text("question_paper_image"), // Base64 image data for regular exams
   totalMarks: integer("total_marks").default(0),
   isActive: boolean("is_active").default(true),
   createdBy: varchar("created_by").notNull().references(() => users.id),
@@ -155,7 +201,7 @@ export const questions = pgTable("questions", {
 export const questionBank = pgTable("question_bank", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   teacherId: varchar("teacher_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  subject: varchar("subject").notNull(), // Chemistry or ICT
+  subject: varchar("subject").notNull(), // Science or Math (legacy chemistry/ict mapped at input layer)
   category: varchar("category").notNull(), // Academic or Admission
   subCategory: varchar("sub_category").notNull(), // Board/Test Paper for Academic, Admission for Admission  
   chapter: varchar("chapter").notNull(),
@@ -181,10 +227,28 @@ export const examSubmissions = pgTable("exam_submissions", {
   score: integer("score"),
   manualMarks: integer("manual_marks"), // For offline exams - manually entered marks
   totalMarks: integer("total_marks"),
+  percentage: integer("percentage"), // Score percentage
+  rank: integer("rank"), // Student rank in this exam
   isSubmitted: boolean("is_submitted").default(false),
   submittedAt: timestamp("submitted_at"),
   timeSpent: integer("time_spent"), // in minutes
   feedback: text("feedback"), // Teacher feedback for offline exams
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Online exam questions table (separate from regular questions for better management)
+export const onlineExamQuestions = pgTable("online_exam_questions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  examId: varchar("exam_id").notNull().references(() => exams.id, { onDelete: 'cascade' }),
+  questionText: text("question_text").notNull(),
+  optionA: text("option_a").notNull(),
+  optionB: text("option_b").notNull(), 
+  optionC: text("option_c").notNull(),
+  optionD: text("option_d").notNull(),
+  correctAnswer: varchar("correct_answer").notNull(), // A, B, C, or D
+  explanation: text("explanation"), // Explanation for the correct answer
+  marks: integer("marks").notNull().default(1),
+  orderIndex: integer("order_index").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -209,17 +273,20 @@ export const notices = pgTable("notices", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Attendance table
+// Attendance table - updated for daily calendar-based tracking
 export const attendance = pgTable("attendance", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   studentId: varchar("student_id").notNull().references(() => users.id),
   batchId: varchar("batch_id").notNull().references(() => batches.id),
-  date: timestamp("date").notNull(),
-  isPresent: boolean("is_present").notNull(),
-  subject: subjectEnum("subject").notNull(),
+  date: timestamp("date").notNull(), // YYYY-MM-DD date
+  calendarId: varchar("calendar_id").references(() => academicCalendar.id), // Link to academic calendar
+  attendanceStatus: attendanceStatusEnum("attendance_status").notNull().default("present"), // present, excused, absent
+  subject: subjectEnum("subject"), // Optional - which subject class
   notes: text("notes"), // Optional notes about attendance
-  createdBy: varchar("created_by").notNull().references(() => users.id),
+  markedBy: varchar("marked_by").notNull().references(() => users.id), // Teacher who marked attendance
+  markedAt: timestamp("marked_at").defaultNow(), // When attendance was marked
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // SMS logs table
@@ -294,7 +361,7 @@ export const courses = pgTable("courses", {
   titleBangla: varchar("title_bangla").notNull(), // Bengali title
   description: text("description").notNull(), // Course description
   subject: subjectEnum("subject").notNull(),
-  targetClass: varchar("target_class").notNull(), // e.g., "9-10", "11-12", "admission"
+  targetClass: varchar("target_class").notNull(), // e.g., "6", "7", "8", "9", "10"
   iconName: varchar("icon_name").notNull().default('FlaskConical'), // Lucide icon name
   colorScheme: varchar("color_scheme").notNull(), // e.g., "cyan", "purple", "green", "yellow"
   isActive: boolean("is_active").default(true),
@@ -311,7 +378,7 @@ export const teacherProfiles = pgTable("teacher_profiles", {
   displayName: varchar("display_name").notNull(), // e.g., "Belal Sir"
   education: text("education"), // e.g., "Graduate from Rajshahi University"
   currentPosition: text("current_position"), // e.g., "Teacher at Jahangirpur Girls School and College"
-  specialization: text("specialization"), // e.g., "Specialist in Chemistry & ICT"
+  specialization: text("specialization"), // e.g., "Specialist in Science & Math"
   motto: text("motto"), // e.g., "Dedicated to Excellence in Education"
   bio: text("bio"), // Detailed biography/description
   avatarUrl: text("avatar_url"), // Profile picture URL
@@ -339,8 +406,13 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   attendanceRecords: many(attendance),
   smsTransactions: many(smsTransactions),
   smsLogs: many(smsLogs),
+  smsTemplates: many(smsTemplates),
+  smsAutomationRules: many(smsAutomationRules),
   sharedNotes: many(notes),
   questionBankEntries: many(questionBank),
+  studentFees: many(studentFees, { relationName: "studentFees" }),
+  collectedFees: many(studentFees, { relationName: "collectedFees" }),
+  feePayments: many(feePayments),
 }));
 
 export const batchesRelations = relations(batches, ({ one, many }) => ({
@@ -351,6 +423,9 @@ export const batchesRelations = relations(batches, ({ one, many }) => ({
   students: many(users),
   attendanceRecords: many(attendance),
   notes: many(notes),
+  smsAutomationRules: many(smsAutomationRules),
+  studentFees: many(studentFees),
+  feeSettings: many(batchFeeSettings),
 }));
 
 export const examsRelations = relations(exams, ({ one, many }) => ({
@@ -416,8 +491,8 @@ export const attendanceRelations = relations(attendance, ({ one }) => ({
     fields: [attendance.batchId],
     references: [batches.id],
   }),
-  creator: one(users, {
-    fields: [attendance.createdBy],
+  markedBy: one(users, {
+    fields: [attendance.markedBy],
     references: [users.id],
   }),
 }));
@@ -437,6 +512,100 @@ export const smsTransactionsRelations = relations(smsTransactions, ({ one }) => 
   user: one(users, {
     fields: [smsTransactions.userId],
     references: [users.id],
+  }),
+}));
+
+
+
+
+
+// SMS Templates System
+export const smsTemplates = pgTable("sms_templates", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  type: smsTypeEnum("type").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  template: text("template").notNull(),
+  description: text("description"),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const smsTemplateVariables = pgTable("sms_template_variables", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").references(() => smsTemplates.id, { onDelete: "cascade" }).notNull(),
+  variableName: varchar("variable_name", { length: 50 }).notNull(),
+  description: text("description"),
+  isRequired: boolean("is_required").default(true).notNull(),
+  defaultValue: text("default_value"),
+});
+
+export const smsAutomationRules = pgTable("sms_automation_rules", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  templateId: integer("template_id").references(() => smsTemplates.id).notNull(),
+  triggerType: triggerTypeEnum("trigger_type").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  targetAudience: targetAudienceEnum("target_audience").notNull(),
+  batchId: varchar("batch_id").references(() => batches.id),
+  scheduleDay: integer("schedule_day"), // Day of month for monthly automation (1-31)
+  scheduleTime: time("schedule_time"), // Time of day to send
+  lastExecuted: timestamp("last_executed"),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const smsAutomationExecutions = pgTable("sms_automation_executions", {
+  id: serial("id").primaryKey(),
+  ruleId: integer("rule_id").references(() => smsAutomationRules.id, { onDelete: "cascade" }).notNull(),
+  executedAt: timestamp("executed_at").defaultNow().notNull(),
+  recipientCount: integer("recipient_count").notNull(),
+  successCount: integer("success_count").notNull(),
+  failedCount: integer("failed_count").notNull(),
+  totalCost: decimal("total_cost", { precision: 10, scale: 4 }),
+  status: executionStatusEnum("execution_status").notNull(),
+  errorMessage: text("error_message"),
+});
+
+// SMS Template Relations
+export const smsTemplatesRelations = relations(smsTemplates, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [smsTemplates.createdBy],
+    references: [users.id],
+  }),
+  variables: many(smsTemplateVariables),
+  automationRules: many(smsAutomationRules),
+}));
+
+export const smsTemplateVariablesRelations = relations(smsTemplateVariables, ({ one }) => ({
+  template: one(smsTemplates, {
+    fields: [smsTemplateVariables.templateId],
+    references: [smsTemplates.id],
+  }),
+}));
+
+export const smsAutomationRulesRelations = relations(smsAutomationRules, ({ one, many }) => ({
+  template: one(smsTemplates, {
+    fields: [smsAutomationRules.templateId],
+    references: [smsTemplates.id],
+  }),
+  batch: one(batches, {
+    fields: [smsAutomationRules.batchId],
+    references: [batches.id],
+  }),
+  creator: one(users, {
+    fields: [smsAutomationRules.createdBy],
+    references: [users.id],
+  }),
+  executions: many(smsAutomationExecutions),
+}));
+
+export const smsAutomationExecutionsRelations = relations(smsAutomationExecutions, ({ one }) => ({
+  rule: one(smsAutomationRules, {
+    fields: [smsAutomationExecutions.ruleId],
+    references: [smsAutomationRules.id],
   }),
 }));
 
@@ -514,7 +683,8 @@ export const insertExamSchema = createInsertSchema(exams).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  subject: z.enum(['chemistry', 'ict']),
+  // Accept new subjects; keep legacy mapping through transform
+  subject: z.string().transform((val) => normalizeLegacySubject(val)),
   examMode: z.enum(['online', 'offline']).default('online'),
   questionSource: z.enum(['drive_link', 'file_upload']).default('drive_link'),
   examDate: z.string().transform((str) => new Date(str)),
@@ -529,6 +699,13 @@ export const insertQuestionSchema = createInsertSchema(questions).omit({
 export const insertSubmissionSchema = createInsertSchema(examSubmissions).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertOnlineExamQuestionSchema = createInsertSchema(onlineExamQuestions).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  correctAnswer: z.enum(['A', 'B', 'C', 'D']),
 });
 
 export const insertMessageSchema = createInsertSchema(messages).omit({
@@ -571,7 +748,7 @@ export const insertQuestionBankSchema = createInsertSchema(questionBank).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  subject: z.enum(['chemistry', 'ict']),
+  subject: z.string().transform((val) => normalizeLegacySubject(val)),
   category: z.enum(['Academic', 'Admission']),
   subCategory: z.enum(['Board', 'Test Paper', 'Admission']),
   difficulty: z.enum(['easy', 'medium', 'hard']).default('medium'),
@@ -625,7 +802,7 @@ export const praggoAIUsage = pgTable("praggo_ai_usage", {
 });
 
 // Question Bank System - NCTB Based Structure
-export const classLevelEnum = pgEnum('class_level', ['9-10', '11-12']);
+export const classLevelEnum = pgEnum('class_level', ['6', '7', '8', '9', '10']);
 export const paperEnum = pgEnum('paper', ['১ম পত্র', '২য় পত্র']);
 export const questionBankCategoryEnum = pgEnum('question_bank_category', [
   'board_questions', 
@@ -685,6 +862,19 @@ export const insertPraggoAIUsageSchema = createInsertSchema(praggoAIUsage).omit(
   createdAt: true,
 });
 
+// ============================
+// Legacy Subject Normalization
+// ============================
+// Maps old subject identifiers to the new enum values.
+export function normalizeLegacySubject(value: string): 'science' | 'math' {
+  const lowered = value.toLowerCase();
+  if (lowered === 'chemistry' || lowered === 'ict' || lowered === 'general_science') return 'science';
+  if (lowered === 'general_math' || lowered === 'higher_math' || lowered === 'math' || lowered === 'mathematics') return 'math';
+  // Default fallback
+  if (lowered === 'science') return 'science';
+  return 'math';
+}
+
 // Question Bank Schema Validations
 export const insertQuestionBankCategorySchema = createInsertSchema(questionBankCategories).omit({
   id: true,
@@ -696,6 +886,103 @@ export const insertQuestionBankItemSchema = createInsertSchema(questionBankItems
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+// ============================
+// MONTHLY RESULTS SYSTEM
+// ============================
+
+// Monthly Results - stores calculated monthly results for each student
+export const monthlyResults = pgTable("monthly_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  batchId: varchar("batch_id").notNull().references(() => batches.id),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(), // 1-12
+  classLevel: varchar("class_level").notNull(), // 6, 7, 8, 9, 10
+  
+  // Exam Performance
+  examAverage: integer("exam_average").default(0), // Percentage (0-100)
+  totalExams: integer("total_exams").default(0),
+  
+  // Attendance Performance  
+  presentDays: integer("present_days").default(0),
+  absentDays: integer("absent_days").default(0),
+  excusedDays: integer("excused_days").default(0),
+  workingDays: integer("working_days").notNull(),
+  attendancePercentage: integer("attendance_percentage").default(0), // 0-100
+  
+  // Bonus Calculation
+  bonusMarks: integer("bonus_marks").default(0), // 30 - working_days
+  
+  // Final Results
+  finalScore: integer("final_score").default(0), // Weighted final score (0-100)
+  classRank: integer("class_rank").default(0),
+  totalStudents: integer("total_students").default(0),
+  
+  // SMS Status
+  smsNotificationSent: boolean("sms_notification_sent").default(false),
+  
+  // Timestamps
+  generatedAt: timestamp("generated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Monthly Exam Records - links exams to monthly calculations
+export const monthlyExamRecords = pgTable("monthly_exam_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  monthlyResultId: varchar("monthly_result_id").notNull().references(() => monthlyResults.id, { onDelete: 'cascade' }),
+  examId: varchar("exam_id").notNull().references(() => exams.id, { onDelete: 'cascade' }),
+  studentId: varchar("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  marksObtained: integer("marks_obtained").default(0),
+  totalMarks: integer("total_marks").notNull(),
+  percentage: integer("percentage").default(0), // 0-100
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Top Performers - cached monthly rankings for homepage display
+export const topPerformers = pgTable("top_performers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  classLevel: varchar("class_level").notNull(),
+  rank: integer("rank").notNull(), // 1-5 for top 5
+  finalScore: integer("final_score").notNull(),
+  studentName: varchar("student_name").notNull(),
+  studentPhoto: text("student_photo"), // Base64 or URL
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert schemas for monthly results
+export const insertAcademicCalendarSchema = createInsertSchema(academicCalendar).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMonthlyResultSchema = createInsertSchema(monthlyResults).omit({
+  id: true,
+  generatedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMonthlyExamRecordSchema = createInsertSchema(monthlyExamRecords).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTopPerformerSchema = createInsertSchema(topPerformers).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Monthly Calendar Summary Zod schema
+export const insertMonthlyCalendarSummarySchema = createInsertSchema(monthlyCalendarSummary).omit({
+  id: true,
+  createdAt: true,
 });
 
 // Types
@@ -710,6 +997,8 @@ export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
 export type Question = typeof questions.$inferSelect;
 export type InsertSubmission = z.infer<typeof insertSubmissionSchema>;
 export type ExamSubmission = typeof examSubmissions.$inferSelect;
+export type InsertOnlineExamQuestion = z.infer<typeof insertOnlineExamQuestionSchema>;
+export type OnlineExamQuestion = typeof onlineExamQuestions.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertNotice = z.infer<typeof insertNoticeSchema>;
@@ -740,3 +1029,117 @@ export type InsertPraggoAIKey = z.infer<typeof insertPraggoAIKeySchema>;
 export type PraggoAIKey = typeof praggoAIKeys.$inferSelect;
 export type InsertPraggoAIUsage = z.infer<typeof insertPraggoAIUsageSchema>;
 export type PraggoAIUsage = typeof praggoAIUsage.$inferSelect;
+
+// Monthly Results Types
+export type InsertAcademicCalendar = z.infer<typeof insertAcademicCalendarSchema>;
+export type AcademicCalendar = typeof academicCalendar.$inferSelect;
+export type InsertMonthlyResult = z.infer<typeof insertMonthlyResultSchema>;
+export type MonthlyResult = typeof monthlyResults.$inferSelect;
+export type InsertMonthlyExamRecord = z.infer<typeof insertMonthlyExamRecordSchema>;
+export type MonthlyExamRecord = typeof monthlyExamRecords.$inferSelect;
+// Fee Collection Tables
+export const studentFees = pgTable("student_fees", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id").notNull().references(() => users.id),
+  batchId: varchar("batch_id").notNull().references(() => batches.id),
+  month: varchar("month").notNull(), // e.g. '2025-01'
+  amount: integer("amount").notNull(),
+  amountPaid: integer("amount_paid").notNull().default(0),
+  status: varchar("status").notNull().default('unpaid'), // paid, unpaid, partial
+  dueDate: timestamp("due_date").notNull(),
+  remarks: text("remarks"),
+  collectedBy: varchar("collected_by").references(() => users.id), // teacher/admin
+  collectedAt: timestamp("collected_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Fee Payments Table - for tracking individual payment transactions
+export const feePayments = pgTable("fee_payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  feeId: varchar("fee_id").notNull().references(() => studentFees.id),
+  amount: integer("amount").notNull(),
+  paymentMethod: varchar("payment_method").notNull().default('cash'), // cash, bank, online
+  transactionId: varchar("transaction_id"), // for bank/online payments
+  collectedBy: varchar("collected_by").notNull().references(() => users.id),
+  remarks: text("remarks"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Batch Fee Settings Table - for setting monthly fees per batch
+export const batchFeeSettings = pgTable("batch_fee_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  batchId: varchar("batch_id").notNull().references(() => batches.id),
+  monthlyFee: integer("monthly_fee").notNull(),
+  admissionFee: integer("admission_fee").default(0),
+  examFee: integer("exam_fee").default(0),
+  effectiveFrom: timestamp("effective_from").defaultNow(),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Fee collection schemas
+export const insertStudentFeeSchema = createInsertSchema(studentFees).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFeePaymentSchema = createInsertSchema(feePayments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBatchFeeSettingSchema = createInsertSchema(batchFeeSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Fee collection types
+export type InsertStudentFee = z.infer<typeof insertStudentFeeSchema>;
+export type StudentFee = typeof studentFees.$inferSelect;
+export type InsertFeePayment = z.infer<typeof insertFeePaymentSchema>;
+export type FeePayment = typeof feePayments.$inferSelect;
+export type InsertBatchFeeSetting = z.infer<typeof insertBatchFeeSettingSchema>;
+export type BatchFeeSetting = typeof batchFeeSettings.$inferSelect;
+export type InsertTopPerformer = z.infer<typeof insertTopPerformerSchema>;
+export type TopPerformer = typeof topPerformers.$inferSelect;
+export type InsertMonthlyCalendarSummary = z.infer<typeof insertMonthlyCalendarSummarySchema>;
+export type MonthlyCalendarSummary = typeof monthlyCalendarSummary.$inferSelect;
+
+// Fee Collection Relations
+export const studentFeesRelations = relations(studentFees, ({ one, many }) => ({
+  student: one(users, {
+    fields: [studentFees.studentId],
+    references: [users.id],
+  }),
+  batch: one(batches, {
+    fields: [studentFees.batchId],
+    references: [batches.id],
+  }),
+  collector: one(users, {
+    fields: [studentFees.collectedBy],
+    references: [users.id],
+  }),
+  payments: many(feePayments),
+}));
+
+export const feePaymentsRelations = relations(feePayments, ({ one }) => ({
+  fee: one(studentFees, {
+    fields: [feePayments.feeId],
+    references: [studentFees.id],
+  }),
+  collector: one(users, {
+    fields: [feePayments.collectedBy],
+    references: [users.id],
+  }),
+}));
+
+export const batchFeeSettingsRelations = relations(batchFeeSettings, ({ one }) => ({
+  batch: one(batches, {
+    fields: [batchFeeSettings.batchId],
+    references: [batches.id],
+  }),
+}));

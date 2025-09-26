@@ -230,8 +230,8 @@ export default function TeacherQuestionBank() {
 
         <Card 
           className={`cursor-pointer transition-all hover:scale-105 ${isDarkMode 
-            ? 'bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-400/30 hover:border-blue-400/50' 
-            : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 hover:border-blue-300 shadow-md'
+            ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-400/30 hover:border-blue-400/50' 
+            : 'bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200 hover:border-blue-300 shadow-md'
           }`}
           onClick={() => {
             setSelectedSubject('ICT');
@@ -239,7 +239,7 @@ export default function TeacherQuestionBank() {
           }}
         >
           <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Cpu className="w-6 h-6 text-white" />
             </div>
             <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
@@ -555,7 +555,7 @@ export default function TeacherQuestionBank() {
     <MobileWrapper>
       <div className={`min-h-screen ${isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' 
-        : 'bg-gradient-to-br from-white via-gray-50 to-cyan-50'
+        : 'bg-gradient-to-br from-white via-gray-50 to-purple-50'
       } transition-colors duration-300`}>
         
         {/* Header */}
@@ -599,11 +599,11 @@ export default function TeacherQuestionBank() {
           {statsData && (
             <div className="grid grid-cols-2 gap-4">
               <Card className={`force-mobile-card ${isDarkMode 
-                ? 'bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-400/30' 
-                : 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 shadow-md'
+                ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-400/30' 
+                : 'bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200 shadow-md'
               }`}>
                 <CardContent className="p-4 text-center">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-2">
                     <Trophy className="w-4 h-4 text-white" />
                   </div>
                   <p className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>

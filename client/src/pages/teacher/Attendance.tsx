@@ -37,7 +37,7 @@ interface Student {
 interface Batch {
   id: string;
   name: string;
-  subject: 'chemistry' | 'ict';
+  subject: string;
   batchCode: string;
   currentStudents: number;
 }
@@ -55,7 +55,6 @@ export default function Attendance() {
   
   // State management
   const [selectedBatch, setSelectedBatch] = useState<string>('');
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [attendanceRecords, setAttendanceRecords] = useState<{ [key: string]: AttendanceRecord }>({});
   const [sendSMS, setSendSMS] = useState<boolean>(true);
@@ -101,10 +100,8 @@ export default function Attendance() {
     }
   }, [students, existingAttendance]);
 
-  // Filter batches by selected subject
-  const filteredBatches = selectedSubject 
-    ? batches.filter(batch => batch.subject === selectedSubject)
-    : batches;
+  // Use all batches directly
+  const filteredBatches = batches || [];
 
   // Take attendance mutation
   const takeAttendanceMutation = useMutation({
@@ -118,16 +115,36 @@ export default function Attendance() {
         description: data.message || "Attendance recorded successfully",
       });
       
-      // Show summary
+      // Show attendance summary
       if (data.summary) {
         toast({
-          title: "Attendance Summary",
+          title: "📊 Attendance Summary",
           description: `Total: ${data.summary.total} | Present: ${data.summary.present} | Absent: ${data.summary.absent}`,
         });
       }
       
+      // Show SMS results if available
+      if (data.smsResults) {
+        const { totalSent, totalFailed } = data.smsResults;
+        if (totalSent > 0) {
+          toast({
+            title: "📱 SMS Notifications Sent",
+            description: `Successfully sent ${totalSent} SMS${totalFailed > 0 ? `, ${totalFailed} failed` : ''}`,
+          });
+        } else if (totalFailed > 0) {
+          toast({
+            title: "⚠️ SMS Failed",
+            description: `Failed to send ${totalFailed} SMS notifications. Check your SMS balance.`,
+            variant: "destructive",
+          });
+        }
+      }
+      
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['/api/attendance'] });
+      
+      // Clear attendance records for fresh start
+      setAttendanceRecords({});
     },
     onError: (error) => {
       toast({
@@ -150,10 +167,10 @@ export default function Attendance() {
   };
 
   const handleSubmit = () => {
-    if (!selectedBatch || !selectedSubject) {
+    if (!selectedBatch) {
       toast({
         title: "Missing Information",
-        description: "Please select both batch and subject",
+        description: "Please select a batch",
         variant: "destructive",
       });
       return;
@@ -187,9 +204,20 @@ export default function Attendance() {
       }
     }
     
+    const selectedBatchObj = batches?.find(b => b.id === selectedBatch);
+    
+    // Show SMS preview if SMS is enabled
+    if (sendSMS) {
+      const studentsWithParentNumbers = students.filter(student => student.parentPhoneNumber);
+      toast({
+        title: "📱 Sending SMS Notifications",
+        description: `Attendance SMS will be sent to ${studentsWithParentNumbers.length} parents. Required credits: ${studentsWithParentNumbers.length}`,
+      });
+    }
+    
     takeAttendanceMutation.mutate({
       batchId: selectedBatch,
-      subject: selectedSubject,
+      subject: selectedBatchObj?.subject || '',
       date: selectedDate,
       attendanceData,
       sendSMS
@@ -221,63 +249,66 @@ export default function Attendance() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Header */}
-      <header className="p-4 border-b border-gray-200 dark:border-gray-700">
+      {/* Header - Mobile Optimized with Sticky */}
+      <header className="sticky top-0 z-50 px-4 py-3 bg-white/80 backdrop-blur-sm border-b border-gray-200 dark:bg-slate-900/80 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Button 
               variant="ghost" 
+              size="sm"
               onClick={() => navigate("/")}
-              className="flex items-center space-x-2 hover:bg-orange-50 dark:hover:bg-slate-700"
+              className="flex items-center space-x-1 hover:bg-orange-50 dark:hover:bg-slate-700 px-3 py-2"
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back</span>
             </Button>
-            <div className="flex items-center space-x-2">
-              <CalendarCheck className={`w-6 h-6 ${isDarkMode ? 'text-cyan-400' : 'text-orange-600'}`} />
-              <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                Take Attendance - Chemistry & ICT
-              </h1>
-            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <CalendarCheck className={`w-5 h-5 ${isDarkMode ? 'text-purple-400' : 'text-orange-600'}`} />
+            <h1 className={`text-base sm:text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+              <span className="hidden sm:inline">Take Attendance</span>
+              <span className="sm:hidden">Attendance</span>
+            </h1>
           </div>
         </div>
       </header>
 
-      <main className="p-6">
-        {/* Selection Cards - Mobile Optimized */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          {/* Subject Selection */}
-          <Card className="border border-orange-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-orange-800">Select Subject</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select onValueChange={setSelectedSubject}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="chemistry">🧪 Chemistry</SelectItem>
-                  <SelectItem value="ict">💻 ICT</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
+      <main className="px-4 py-6 sm:p-6">
+        {/* Mobile Batch Info Banner */}
+        {selectedBatch && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg sm:hidden">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-blue-900">
+                  {batches?.find(b => b.id === selectedBatch)?.name}
+                </h3>
+                <p className="text-sm text-blue-700">
+                  {batches?.find(b => b.id === selectedBatch)?.subject} • {selectedDate}
+                </p>
+              </div>
+              <Badge className="bg-blue-100 text-blue-800">
+                {students.length} students
+              </Badge>
+            </div>
+          </div>
+        )}
 
+        {/* Selection Cards - Mobile Optimized */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4 sm:mb-6">
           {/* Batch Selection */}
-          <Card className="border border-blue-200">
+          <Card className="border border-blue-200 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-blue-800">Select Batch</CardTitle>
+              <CardTitle className="text-sm font-medium text-blue-800">Select Batch</CardTitle>
             </CardHeader>
             <CardContent>
-              <Select onValueChange={setSelectedBatch} disabled={!selectedSubject}>
-                <SelectTrigger>
+              <Select onValueChange={setSelectedBatch}>
+                <SelectTrigger className="h-12 text-base">
                   <SelectValue placeholder="Choose batch" />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredBatches.map(batch => (
                     <SelectItem key={batch.id} value={batch.id}>
-                      {batch.name} ({batch.currentStudents} students)
+                      {batch.name} - {batch.subject} ({batch.currentStudents} students)
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -286,36 +317,72 @@ export default function Attendance() {
           </Card>
 
           {/* Date Selection */}
-          <Card className="border border-green-200">
+          <Card className="border border-green-200 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-green-800">Select Date</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-800">Select Date</CardTitle>
             </CardHeader>
             <CardContent>
               <Input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="border-green-200"
+                className="border-green-200 h-12 text-base"
               />
             </CardContent>
           </Card>
 
-          {/* SMS Toggle */}
-          <Card className="border border-purple-200">
+          {/* SMS Toggle & Balance */}
+          <Card className="border border-purple-200 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-purple-800">SMS Notifications</CardTitle>
+              <CardTitle className="text-sm font-medium text-purple-800 flex items-center">
+                SMS Notifications
+                {smsCreditsData ? (
+                  <Badge className="ml-2 bg-purple-100 text-purple-800">
+                    {(smsCreditsData as any)?.smsCredits || 0} SMS
+                  </Badge>
+                ) : null}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="sms"
-                  checked={sendSMS}
-                  onCheckedChange={(checked) => setSendSMS(checked === true)}
-                />
-                <Label htmlFor="sms" className="text-sm">
-                  Send to parents
-                </Label>
-                <MessageSquare className="w-4 h-4 text-purple-600" />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="sms"
+                      checked={sendSMS}
+                      onCheckedChange={(checked) => setSendSMS(checked === true)}
+                      className="w-5 h-5"
+                    />
+                    <Label htmlFor="sms" className="text-sm font-medium cursor-pointer">
+                      Send to parents
+                    </Label>
+                  </div>
+                  <MessageSquare className="w-5 h-5 text-purple-600" />
+                </div>
+                
+                {/* SMS Cost Estimate */}
+                {sendSMS && selectedBatch && students.length > 0 && (
+                  <div className="text-xs bg-purple-50 p-2 rounded">
+                    <div className="flex justify-between items-center">
+                      <span>SMS Required:</span>
+                      <span className="font-medium">
+                        {students.filter(s => s.parentPhoneNumber).length} SMS
+                      </span>
+                    </div>
+                    {smsCreditsData ? (
+                      <div className="flex justify-between items-center mt-1">
+                        <span>Balance After:</span>
+                        <span className={`font-medium ${
+                          ((smsCreditsData as any)?.smsCredits || 0) - students.filter(s => s.parentPhoneNumber).length >= 0 
+                            ? 'text-green-600' 
+                            : 'text-red-600'
+                        }`}>
+                          {((smsCreditsData as any)?.smsCredits || 0) - students.filter(s => s.parentPhoneNumber).length} SMS
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -323,7 +390,7 @@ export default function Attendance() {
 
         {/* Statistics Cards - Mobile Optimized */}
         {selectedBatch && students.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
             <Card className="border border-blue-200 bg-blue-50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-blue-800 flex items-center">
@@ -364,22 +431,22 @@ export default function Attendance() {
 
         {/* Quick Actions - Mobile Optimized */}
         {selectedBatch && students.length > 0 && (
-          <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-4 sm:mb-6">
             <Button
               onClick={markAllPresent}
-              className="bg-green-600 hover:bg-green-700 text-white py-3"
+              className="bg-green-600 hover:bg-green-700 text-white py-4 font-medium rounded-lg shadow-lg active:scale-95 transition-all"
               size="lg"
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
+              <CheckCircle className="w-5 h-5 mr-2" />
               All Present
             </Button>
             <Button
               onClick={markAllAbsent}
               variant="outline"
-              className="border-red-200 text-red-700 hover:bg-red-50 py-3"
+              className="border-red-300 text-red-700 hover:bg-red-50 py-4 font-medium rounded-lg shadow-lg active:scale-95 transition-all border-2"
               size="lg"
             >
-              <XCircle className="w-4 h-4 mr-2" />
+              <XCircle className="w-5 h-5 mr-2" />
               All Absent
             </Button>
           </div>
@@ -395,9 +462,9 @@ export default function Attendance() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-3 sm:space-y-4">
                 {students.map(student => (
-                  <div key={student.id} className="p-3 border rounded-lg bg-gray-50">
+                  <div key={student.id} className="p-4 border rounded-lg bg-gray-50 shadow-sm hover:shadow-md transition-shadow">
                     {/* Student Info - Mobile Friendly */}
                     <div className="flex flex-col space-y-3">
                       {/* Top Row: Student Details */}
@@ -436,14 +503,14 @@ export default function Attendance() {
                       </div>
                       
                       {/* Mobile Optimized Present/Absent Buttons */}
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-3">
                         <Button
                           size="lg"
                           onClick={() => handleAttendanceChange(student.id, 'isPresent', true)}
-                          className={`w-full text-base py-3 ${
+                          className={`w-full text-base py-4 font-medium rounded-lg transition-all duration-200 active:scale-95 ${
                             attendanceRecords[student.id]?.isPresent
-                              ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg'
-                              : 'bg-gray-200 text-gray-600 hover:bg-green-100'
+                              ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg border-2 border-green-500'
+                              : 'bg-gray-200 text-gray-600 hover:bg-green-100 border-2 border-gray-300 hover:border-green-300'
                           }`}
                         >
                           <CheckCircle className="w-5 h-5 mr-2" />
@@ -452,10 +519,10 @@ export default function Attendance() {
                         <Button
                           size="lg"
                           onClick={() => handleAttendanceChange(student.id, 'isPresent', false)}
-                          className={`w-full text-base py-3 ${
+                          className={`w-full text-base py-4 font-medium rounded-lg transition-all duration-200 active:scale-95 ${
                             !attendanceRecords[student.id]?.isPresent
-                              ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg'
-                              : 'bg-gray-200 text-gray-600 hover:bg-red-100'
+                              ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg border-2 border-red-500'
+                              : 'bg-gray-200 text-gray-600 hover:bg-red-100 border-2 border-gray-300 hover:border-red-300'
                           }`}
                         >
                           <XCircle className="w-5 h-5 mr-2" />
@@ -468,18 +535,26 @@ export default function Attendance() {
                 ))}
               </div>
 
-              {/* Submit Button */}
-              <div className="mt-6 pt-4 border-t">
+              {/* Submit Button - Mobile Optimized */}
+              <div className="mt-6 pt-4 border-t sticky bottom-0 bg-white/90 backdrop-blur-sm pb-safe">
                 <Button
                   onClick={handleSubmit}
-                  disabled={takeAttendanceMutation.isPending || !selectedBatch || !selectedSubject}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+                  disabled={takeAttendanceMutation.isPending || !selectedBatch}
+                  size="lg"
+                  className="w-full py-5 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl shadow-xl active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[60px]"
                 >
-                  <Save className="w-4 h-4 mr-2" />
-                  {takeAttendanceMutation.isPending 
-                    ? 'Saving Attendance...' 
-                    : `Save Attendance & ${sendSMS ? 'Send SMS' : 'Skip SMS'}`
-                  }
+                  <Save className="w-6 h-6 mr-3" />
+                  <span className="text-center">
+                    {takeAttendanceMutation.isPending 
+                      ? 'Saving Attendance...' 
+                      : (
+                        <>
+                          <span className="block sm:inline">Save Attendance</span>
+                          {sendSMS && <span className="block sm:inline sm:ml-1">& Send SMS</span>}
+                        </>
+                      )
+                    }
+                  </span>
                 </Button>
               </div>
             </CardContent>
@@ -507,7 +582,7 @@ export default function Attendance() {
                 <CalendarCheck className="w-12 h-12 mx-auto text-blue-600 mb-4" />
                 <h3 className="text-lg font-medium text-blue-900 mb-2">Take Attendance</h3>
                 <p className="text-blue-700 mb-4">
-                  Select subject and batch to start taking attendance for your Chemistry & ICT classes.
+                  Select subject and batch to start taking attendance for your Science & Math classes.
                 </p>
                 <div className="text-sm text-blue-600">
                   <p>✅ Mark students as Present or Absent</p>

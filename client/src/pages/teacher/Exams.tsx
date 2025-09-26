@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,7 +38,16 @@ export default function Exams() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch exams with Chemistry & ICT filtering
+  // Check URL parameters to redirect to online exam creation page
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('create') === 'online-exam') {
+      console.log('Redirecting to online exam creation page...');
+      navigate('/teacher/online-exam-creation');
+    }
+  }, [navigate]);
+
+  // Fetch exams with Science & Math filtering
   const { data: exams = [], isLoading } = useQuery({
     queryKey: ['/api/exams'],
   });
@@ -83,15 +92,15 @@ export default function Exams() {
     }
   };
 
-  // Filter exams for Chemistry and ICT only
+  // Filter exams for Science and Math only
   const filteredExams = (exams as any[]).filter((exam: any) => {
     const matchesSearch = exam.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          exam.subject.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSubject = filterSubject === 'all' || 
                           exam.subject.toLowerCase() === filterSubject.toLowerCase();
     
-    // Only show Chemistry and ICT exams (case-insensitive)
-    const validSubject = ['chemistry', 'ict'].includes(exam.subject.toLowerCase());
+    // Only show Science and Math exams (case-insensitive)
+    const validSubject = ['science', 'math'].includes(exam.subject.toLowerCase());
     
     return matchesSearch && matchesSubject && validSubject;
   });
@@ -107,8 +116,8 @@ export default function Exams() {
 
   const getSubjectIcon = (subject: string) => {
     switch (subject.toLowerCase()) {
-      case 'chemistry': return '🧪';
-      case 'ict': return '💻';
+      case 'science': return '🧪';
+      case 'math': return '�';
       default: return '📚';
     }
   };
@@ -130,20 +139,22 @@ export default function Exams() {
               Back
             </Button>
             <div className="flex items-center space-x-2">
-              <FileText className={`w-6 h-6 ${isDarkMode ? 'text-cyan-400' : 'text-orange-600'}`} />
+              <FileText className={`w-6 h-6 ${isDarkMode ? 'text-purple-400' : 'text-orange-600'}`} />
               <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                Exam Management - Chemistry & ICT Only
+                Exam Management - Science & Math Only
               </h1>
             </div>
           </div>
-          <Button 
-            onClick={() => setIsExamModalOpen(true)}
-            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
-            data-testid="button-create-exam"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Chemistry/ICT Exam
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => setIsExamModalOpen(true)}
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+              data-testid="button-create-exam"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Science/Math Exam
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -177,8 +188,8 @@ export default function Exams() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Subjects</SelectItem>
-                    <SelectItem value="chemistry">🧪 Chemistry</SelectItem>
-                    <SelectItem value="ict">💻 ICT</SelectItem>
+                    <SelectItem value="science">🧪 Science</SelectItem>
+                    <SelectItem value="math">� Math</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -208,11 +219,11 @@ export default function Exams() {
           <Card className="text-center py-12 bg-white/80 border-orange-200/50">
             <CardContent>
               <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">No Chemistry or ICT Exams Found</h3>
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">No Science or Math Exams Found</h3>
               <p className="text-gray-500 mb-4">
                 {searchTerm || filterSubject !== 'all' 
                   ? 'Try adjusting your search or filters' 
-                  : 'Create your first exam for Chemistry or ICT'}
+                  : 'Create your first exam for Science or Math'}
               </p>
               <Button 
                 onClick={() => setIsExamModalOpen(true)}
@@ -244,7 +255,7 @@ export default function Exams() {
                             variant="secondary" 
                             className="bg-orange-100 text-orange-700 border-orange-200"
                           >
-                            {exam.subject === 'chemistry' ? 'Chemistry' : 'ICT'}
+                            {exam.subject === 'science' ? 'Science' : 'Math'}
                           </Badge>
                           <Badge 
                             className={`${status.color} text-white`}
@@ -448,6 +459,7 @@ export default function Exams() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
     </div>
   );
 }

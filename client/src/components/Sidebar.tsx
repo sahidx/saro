@@ -8,7 +8,8 @@ import {
   HelpCircle, 
   CalendarCheck, 
   MessageSquare, 
-  Bell, 
+  Bell,
+  DollarSign, 
   Megaphone,
   LogOut,
   Menu,
@@ -18,7 +19,8 @@ import {
   User,
   CreditCard,
   Settings,
-  Code
+  Code,
+  Trophy
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,11 +30,12 @@ interface SidebarProps {
 const teacherMenuItems = [
   { icon: BarChart3, label: 'Dashboard', href: '/' },
   { icon: Megaphone, label: 'AI Questions', href: '/teacher/ai-questions' },
-  { icon: CreditCard, label: 'SMS Balance', href: '/teacher/sms-balance' },
+  { icon: MessageSquare, label: 'SMS Management', href: '/teacher/sms-management' },
   { icon: FileText, label: 'Exam Management', href: '/teacher/exams' },
+  { icon: Trophy, label: 'Monthly Rankings', href: '/teacher/rankings' },
   { icon: CalendarCheck, label: 'Attendance', href: '/attendance' },
+  { icon: DollarSign, label: 'Fee Collection', href: '/teacher/fees' },
   { icon: Bell, label: 'Students', href: '/teacher/students' },
-  { icon: BarChart3, label: 'Reports', href: '/teacher/reports' },
   { icon: Settings, label: 'API Keys', href: '/teacher/api-settings' },
   { icon: HelpCircle, label: 'Question Bank', href: '/teacher/question-bank' },
   { icon: BookOpen, label: 'Course Management', href: '/courses' },
@@ -44,7 +47,6 @@ const studentMenuItems = [
   { icon: HelpCircle, label: 'AI Help', href: '/student/ai-help' },
   { icon: FileText, label: 'My Exams', href: '/student/exams' },
   { icon: CalendarCheck, label: 'Attendance', href: '/student/attendance' },
-  { icon: BarChart3, label: 'Reports', href: '/student/reports' },
   { icon: BookOpen, label: 'Question Bank', href: '/student/question-bank' },
   { icon: Code, label: 'Developer', href: '/student/developer' },
 ];

@@ -1,13 +1,19 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import pg from 'pg'; 
+const { Pool } = pg;
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless';
+import { drizzle as drizzleSQLite } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
 import ws from "ws";
-import * as schema from "@shared/schema";
+import * as pgSchema from "@shared/schema";
+import * as sqliteSchema from "@shared/sqlite-schema";
 
 // Environment validation
 class DatabaseConfig {
   private static instance: DatabaseConfig;
-  private _pool: Pool | null = null;
+  private _pool: typeof Pool.prototype | null = null;
+  private _sqlite: Database.Database | null = null;
   private _db: any = null;
+  private _isPostgreSQL: boolean = false;
   
   private constructor() {
     this.validateEnvironment();
@@ -32,11 +38,14 @@ class DatabaseConfig {
       );
     }
     
-    // Validate DATABASE_URL format
+    // Check database type
     const dbUrl = process.env.DATABASE_URL!;
-    if (!dbUrl.startsWith('postgresql://') && !dbUrl.startsWith('postgres://')) {
+    this._isPostgreSQL = dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://');
+    const isSQLite = dbUrl.startsWith('file:');
+    
+    if (!this._isPostgreSQL && !isSQLite) {
       throw new Error(
-        'DATABASE_URL must be a valid PostgreSQL connection string starting with postgresql:// or postgres://'
+        'DATABASE_URL must be a valid PostgreSQL connection string (postgresql://...) or SQLite file path (file:...)'
       );
     }
     
@@ -45,26 +54,29 @@ class DatabaseConfig {
   
   private initializeConnection(): void {
     try {
-      // Configure Neon for serverless environments
-      neonConfig.webSocketConstructor = ws;
+      const dbUrl = process.env.DATABASE_URL!;
       
-      // Parse connection string to get connection details
-      const dbUrl = new URL(process.env.DATABASE_URL!);
-      
-      // Create connection pool with optimized settings for VPS deployment
-      this._pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        // Connection pool settings for VPS environments
-        max: 20, // Maximum number of clients in the pool
-        idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-        connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
-        maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
-      });
-      
-      // Initialize Drizzle ORM with schema
-      this._db = drizzle({ client: this._pool, schema });
-      
-      console.log(`✅ Database connection initialized for host: ${dbUrl.hostname}`);
+      if (this._isPostgreSQL) {
+        // PostgreSQL connection
+        const parsedUrl = new URL(dbUrl);
+        
+        this._pool = new Pool({
+          connectionString: dbUrl,
+          max: 20,
+          idleTimeoutMillis: 30000,
+          connectionTimeoutMillis: 2000,
+          maxUses: 7500,
+        });
+        
+        this._db = drizzleNeon(this._pool, { schema: pgSchema });
+        console.log(`✅ PostgreSQL connection initialized for host: ${parsedUrl.hostname}`);
+      } else {
+        // SQLite connection
+        const sqlitePath = dbUrl.replace('file:', '');
+        this._sqlite = new Database(sqlitePath);
+        this._db = drizzleSQLite(this._sqlite, { schema: sqliteSchema });
+        console.log(`✅ SQLite connection initialized for file: ${sqlitePath}`);
+      }
       
     } catch (error) {
       console.error('❌ Database initialization failed:', error);
@@ -74,11 +86,14 @@ class DatabaseConfig {
     }
   }
   
-  public get pool(): Pool {
-    if (!this._pool) {
+  public get pool(): any {
+    if (this._isPostgreSQL && !this._pool) {
       throw new Error('Database pool not initialized');
     }
-    return this._pool;
+    if (!this._isPostgreSQL && !this._sqlite) {
+      throw new Error('SQLite database not initialized');
+    }
+    return this._pool || this._sqlite;
   }
   
   public get db(): any {
@@ -91,15 +106,28 @@ class DatabaseConfig {
   // Health check method for VPS monitoring
   public async healthCheck(): Promise<{ status: string; timestamp: string; details?: any }> {
     try {
-      const result = await this._db.execute('SELECT 1 as health_check');
-      return {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        details: {
-          connected: true,
-          result: result.rows?.[0] || result[0]
-        }
-      };
+      if (this._isPostgreSQL) {
+        const result = await this._db.execute('SELECT 1 as health_check');
+        return {
+          status: 'healthy',
+          timestamp: new Date().toISOString(),
+          details: {
+            connected: true,
+            result: result.rows?.[0] || result[0]
+          }
+        };
+      } else {
+        // SQLite health check
+        const result = this._sqlite?.prepare('SELECT 1 as health_check').get();
+        return {
+          status: 'healthy',
+          timestamp: new Date().toISOString(),
+          details: {
+            connected: true,
+            result: result
+          }
+        };
+      }
     } catch (error) {
       return {
         status: 'unhealthy',
@@ -114,9 +142,12 @@ class DatabaseConfig {
   // Graceful shutdown for VPS deployment
   public async close(): Promise<void> {
     try {
-      if (this._pool) {
+      if (this._pool && this._isPostgreSQL) {
         await this._pool.end();
-        console.log('✅ Database connection pool closed gracefully');
+        console.log('✅ PostgreSQL connection pool closed gracefully');
+      } else if (this._sqlite && !this._isPostgreSQL) {
+        this._sqlite.close();
+        console.log('✅ SQLite database closed gracefully');
       }
     } catch (error) {
       console.error('❌ Error closing database connection:', error);

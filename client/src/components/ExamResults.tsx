@@ -219,7 +219,7 @@ export function ExamResults({ exam, isOpen, onClose, userRole, currentUserId }: 
         <div className="space-y-6">
           {/* Student's Own Result (if student view) */}
           {userRole === 'student' && currentUserResult && (
-            <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+            <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-blue-700">
                   <Target className="w-5 h-5" />

@@ -10,7 +10,21 @@ export function useAuth() {
     queryFn: getQueryFn({ on401: "returnNull" }), // Return null on 401 instead of throwing
   });
 
-  const isAuthenticated = !!user;
+  // Development mode mock user when backend is unavailable
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const mockUser = isDevelopment && error && !user ? {
+    id: 'teacher-mock-dev',
+    firstName: 'Golam Sarowar',
+    lastName: 'Sir',
+    phoneNumber: '01762602056',
+    role: 'teacher',
+    email: null,
+    smsCredits: 1000,
+    isActive: true
+  } : null;
+
+  const finalUser = user || mockUser;
+  const isAuthenticated = !!finalUser;
 
   // Login mutation
   const loginMutation = useMutation({
@@ -58,8 +72,8 @@ export function useAuth() {
   };
 
   return {
-    user,
-    isLoading,
+    user: finalUser,
+    isLoading: isLoading && !mockUser, // Don't show loading if we have mock user
     isAuthenticated,
     login,
     logout,

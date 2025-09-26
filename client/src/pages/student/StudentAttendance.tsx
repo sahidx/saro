@@ -26,7 +26,7 @@ interface AttendanceRecord {
   id: string;
   date: string;
   isPresent: boolean;
-  subject: 'chemistry' | 'ict';
+  subject: 'science' | 'math';
   notes?: string;
   createdAt: string;
 }
@@ -55,10 +55,10 @@ export default function StudentAttendance() {
     batch: {
       id: string;
       name: string;
-      subject: 'chemistry' | 'ict';
+      subject: 'science' | 'math';
       batchCode: string;
     };
-    subject: 'chemistry' | 'ict';
+    subject: 'science' | 'math';
   }>({
     queryKey: ['/api/student/batch'],
     enabled: !!user && (user as any)?.role === 'student',
@@ -149,7 +149,7 @@ export default function StudentAttendance() {
     <MobileWrapper>
       <div className={`min-h-screen ${isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' 
-        : 'bg-gradient-to-br from-white via-gray-50 to-cyan-50'
+        : 'bg-gradient-to-br from-white via-gray-50 to-purple-50'
       } transition-colors duration-300`}>
         
         {/* Header */}
@@ -234,8 +234,8 @@ export default function StudentAttendance() {
               </Card>
 
               <Card className={`force-mobile-card ${isDarkMode 
-                ? 'bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/30' 
-                : 'bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 shadow-lg'
+                ? 'bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-400/30' 
+                : 'bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 shadow-lg'
               }`}>
                 <CardContent className="p-4 text-center">
                   <div className={`text-2xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
@@ -388,9 +388,9 @@ export default function StudentAttendance() {
                 : 'bg-white border-gray-200 shadow-lg'
               }`}>
                 <CardHeader>
-                  <CardTitle className={`flex items-center gap-2 ${isDarkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>
-                    {batchData.subject === 'chemistry' ? <FlaskConical className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
-                    {batchData.subject === 'chemistry' ? 'রসায়ন' : 'ICT'} উপস্থিতি
+                  <CardTitle className={`flex items-center gap-2 ${isDarkMode ? 'text-purple-400' : 'text-cyan-700'}`}>
+                    {batchData.subject === 'science' ? <FlaskConical className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
+                    {batchData.subject === 'science' ? 'বিজ্ঞান' : 'গণিত'} উপস্থিতি
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -457,18 +457,18 @@ export default function StudentAttendance() {
                         >
                           <div className="flex items-center space-x-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              record.subject === 'chemistry' 
+                              record.subject === 'science' 
                                 ? isDarkMode ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'
-                                : isDarkMode ? 'bg-cyan-500/20 text-cyan-400' : 'bg-cyan-100 text-cyan-600'
+                                : isDarkMode ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-100 text-cyan-600'
                             }`}>
-                              {record.subject === 'chemistry' ? <FlaskConical className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
+                              {record.subject === 'science' ? <FlaskConical className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
                             </div>
                             <div>
                               <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                                 {new Date(record.date).toLocaleDateString('bn-BD')}
                               </div>
                               <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                {record.subject === 'chemistry' ? 'রসায়ন' : 'ICT'}
+                                {record.subject === 'science' ? 'বিজ্ঞান' : 'গণিত'}
                                 {record.notes && ` - ${record.notes}`}
                               </div>
                             </div>

@@ -68,7 +68,7 @@ function CreateBatchForm({ isDarkMode, onSubmit, isLoading }: CreateBatchFormPro
             <FormItem>
               <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Batch Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., Chemistry Batch 2025" className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                <Input {...field} placeholder="e.g., Chemistry Batch 2025" className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -83,7 +83,7 @@ function CreateBatchForm({ isDarkMode, onSubmit, isLoading }: CreateBatchFormPro
               <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Subject</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'}>
+                  <SelectTrigger className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'}>
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                 </FormControl>
@@ -105,7 +105,7 @@ function CreateBatchForm({ isDarkMode, onSubmit, isLoading }: CreateBatchFormPro
             <FormItem>
               <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Class Time</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., 10:00 AM - 12:00 PM" className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                <Input {...field} placeholder="e.g., 10:00 AM - 12:00 PM" className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -119,7 +119,7 @@ function CreateBatchForm({ isDarkMode, onSubmit, isLoading }: CreateBatchFormPro
             <FormItem>
               <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Maximum Students</FormLabel>
               <FormControl>
-                <Input {...field} type="number" placeholder="50" className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                <Input {...field} type="number" placeholder="50" className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -134,7 +134,7 @@ function CreateBatchForm({ isDarkMode, onSubmit, isLoading }: CreateBatchFormPro
               <FormItem>
                 <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Start Date</FormLabel>
                 <FormControl>
-                  <Input {...field} type="date" className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                  <Input {...field} type="date" className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -147,7 +147,7 @@ function CreateBatchForm({ isDarkMode, onSubmit, isLoading }: CreateBatchFormPro
               <FormItem>
                 <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>End Date</FormLabel>
                 <FormControl>
-                  <Input {...field} type="date" className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                  <Input {...field} type="date" className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -210,7 +210,7 @@ function AddStudentForm({ isDarkMode, onSubmit, batches, isLoading }: AddStudent
               <FormItem>
                 <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>First Name</FormLabel>
                 <FormControl>
-                  <Input {...field} className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                  <Input {...field} className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -223,7 +223,7 @@ function AddStudentForm({ isDarkMode, onSubmit, batches, isLoading }: AddStudent
               <FormItem>
                 <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Last Name</FormLabel>
                 <FormControl>
-                  <Input {...field} className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                  <Input {...field} className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -238,7 +238,7 @@ function AddStudentForm({ isDarkMode, onSubmit, batches, isLoading }: AddStudent
             <FormItem>
               <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Phone Number</FormLabel>
               <FormControl>
-                <Input {...field} className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                <Input {...field} className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -252,7 +252,7 @@ function AddStudentForm({ isDarkMode, onSubmit, batches, isLoading }: AddStudent
             <FormItem>
               <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Parent Phone Number</FormLabel>
               <FormControl>
-                <Input {...field} className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                <Input {...field} className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -267,7 +267,7 @@ function AddStudentForm({ isDarkMode, onSubmit, batches, isLoading }: AddStudent
               <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Batch</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'}>
+                  <SelectTrigger className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'}>
                     <SelectValue placeholder="Select batch" />
                   </SelectTrigger>
                 </FormControl>
@@ -291,7 +291,7 @@ function AddStudentForm({ isDarkMode, onSubmit, batches, isLoading }: AddStudent
             <FormItem>
               <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Institution</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="School/College name" className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} />
+                <Input {...field} placeholder="School/College name" className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -306,7 +306,7 @@ function AddStudentForm({ isDarkMode, onSubmit, batches, isLoading }: AddStudent
               <FormLabel className={isDarkMode ? 'text-cyan-300' : 'text-gray-700'}>Class Level</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'}>
+                  <SelectTrigger className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'}>
                     <SelectValue placeholder="Select class" />
                   </SelectTrigger>
                 </FormControl>
@@ -336,7 +336,7 @@ function AddStudentForm({ isDarkMode, onSubmit, batches, isLoading }: AddStudent
                   {...field} 
                   type="text"
                   placeholder="Enter custom password or leave empty" 
-                  className={isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'} 
+                  className={isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'} 
                 />
               </FormControl>
               <FormMessage />
@@ -494,22 +494,39 @@ export default function Students() {
   const createBatchMutation = useMutation({
     mutationFn: async (batchData: any) => {
       const response = await apiRequest('POST', '/api/batches', batchData);
+      
+      // Check if response is ok
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || 'Failed to create batch');
+      }
+      
       return await response.json();
     },
     onSuccess: (data) => {
-      batchesQuery.refetch();
-      toast({
-        title: '✅ Batch Created Successfully',
-        description: `Batch "${data.name}" created. Batch code: ${data.batchCode}, Password: ${data.password}`,
-        variant: 'default',
-      });
-      setIsCreateBatchModalOpen(false);
+      // Only show success if we actually have valid data
+      if (data && data.name) {
+        batchesQuery.refetch();
+        toast({
+          title: '✅ Batch Created Successfully',
+          description: `Batch "${data.name}" created. Batch code: ${data.batchCode}, Password: ${data.password}`,
+          variant: 'default',
+        });
+        setIsCreateBatchModalOpen(false);
+      } else {
+        // Handle case where response looks successful but data is invalid
+        toast({
+          title: '⚠️ Warning',
+          description: 'Batch may have been created but with incomplete data. Please check the batch list.',
+          variant: 'destructive',
+        });
+      }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error creating batch:', error);
       toast({
-        title: '❌ Error',
-        description: 'Failed to create batch. Please try again.',
+        title: '❌ Error Creating Batch',
+        description: error.message || 'Failed to create batch. Please try again.',
         variant: 'destructive',
       });
     }
@@ -638,13 +655,13 @@ export default function Students() {
               variant="ghost"
               size="sm"
               onClick={() => setLocation('/teacher')}
-              className={`${isDarkMode ? 'text-cyan-400 hover:bg-slate-700' : 'text-orange-600 hover:bg-orange-50'}`}
+              className={`${isDarkMode ? 'text-purple-400 hover:bg-slate-700' : 'text-orange-600 hover:bg-orange-50'}`}
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               Back
             </Button>
             <div className="flex items-center space-x-2">
-              <Users className={`w-6 h-6 ${isDarkMode ? 'text-cyan-400' : 'text-orange-600'}`} />
+              <Users className={`w-6 h-6 ${isDarkMode ? 'text-purple-400' : 'text-orange-600'}`} />
               <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                 Student Management
               </h1>
@@ -654,7 +671,7 @@ export default function Students() {
             <Button
               onClick={() => setIsCreateBatchModalOpen(true)}
               variant="outline"
-              className={`${isDarkMode ? 'border-cyan-400/50 text-cyan-400 hover:bg-cyan-600/20' : 'border-orange-400 text-orange-600 hover:bg-orange-50'}`}
+              className={`${isDarkMode ? 'border-purple-400/50 text-purple-400 hover:bg-cyan-600/20' : 'border-orange-400 text-orange-600 hover:bg-orange-50'}`}
             >
               <GraduationCap className="w-4 h-4 mr-2" />
               Create Batch
@@ -673,7 +690,7 @@ export default function Students() {
       {/* Main Content */}
       <main className="p-4 space-y-6">
         {/* Search and Filters */}
-        <Card className={`${isDarkMode ? 'bg-slate-800/50 border-cyan-400/30' : 'bg-white border-orange-300/50'}`}>
+        <Card className={`${isDarkMode ? 'bg-slate-800/50 border-purple-400/30' : 'bg-white border-orange-300/50'}`}>
           <CardContent className="p-4">
             <div className="flex items-center space-x-4">
               <div className="relative flex-1">
@@ -682,7 +699,7 @@ export default function Students() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search students by name or phone..."
-                  className={`pl-10 ${isDarkMode ? 'bg-slate-700 border-cyan-400/30 text-white' : 'bg-white'}`}
+                  className={`pl-10 ${isDarkMode ? 'bg-slate-700 border-purple-400/30 text-white' : 'bg-white'}`}
                 />
               </div>
             </div>
@@ -690,7 +707,7 @@ export default function Students() {
         </Card>
 
         {/* Batch Management Section */}
-        <Card className={`${isDarkMode ? 'bg-slate-800/50 border-cyan-400/30' : 'bg-white border-orange-300/50'}`}>
+        <Card className={`${isDarkMode ? 'bg-slate-800/50 border-purple-400/30' : 'bg-white border-orange-300/50'}`}>
           <CardHeader>
             <CardTitle className={`${isDarkMode ? 'text-cyan-300' : 'text-orange-600'}`}>
               <GraduationCap className="w-5 h-5 mr-2 inline" />
@@ -747,7 +764,7 @@ export default function Students() {
             </div>
           ) : (
             (filteredStudents as any[]).map((student: any) => (
-              <Card key={student.id} className={`${isDarkMode ? 'bg-slate-800/50 border-cyan-400/30' : 'bg-white border-orange-300/50'}`}>
+              <Card key={student.id} className={`${isDarkMode ? 'bg-slate-800/50 border-purple-400/30' : 'bg-white border-orange-300/50'}`}>
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
                     <div className="space-y-2 flex-1">

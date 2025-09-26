@@ -29,7 +29,7 @@ export default function StudentQuest() {
     <MobileWrapper>
       <div className={`min-h-screen ${isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' 
-        : 'bg-gradient-to-br from-white via-gray-50 to-cyan-50'
+        : 'bg-gradient-to-br from-white via-gray-50 to-purple-50'
       } transition-colors duration-300`}>
         
         {/* Header */}
@@ -192,7 +192,7 @@ export default function StudentQuest() {
             {/* Leaderboard */}
             <Card className={`force-mobile-card ${isDarkMode ? 'bg-slate-800/80 border-slate-600' : 'bg-white border-gray-200 shadow-md'}`}>
               <CardHeader>
-                <CardTitle className={`flex items-center gap-2 ${isDarkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>
+                <CardTitle className={`flex items-center gap-2 ${isDarkMode ? 'text-purple-400' : 'text-cyan-700'}`}>
                   <Trophy className="w-5 h-5" />
                   লিডারবোর্ড
                 </CardTitle>

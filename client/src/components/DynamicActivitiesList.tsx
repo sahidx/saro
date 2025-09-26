@@ -21,7 +21,7 @@ export function DynamicActivitiesList({ activities, isDarkMode }: DynamicActivit
     <>
       {dynamicActivities.map((activity, index) => (
         <div key={index} className="flex items-center space-x-3 animate-in slide-in-from-left duration-200" style={{ animationDelay: `${index * 100}ms` }}>
-          <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full shadow-lg animate-pulse"></div>
+          <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-purple-500 rounded-full shadow-lg animate-pulse"></div>
           <span className={`${isDarkMode ? 'text-foreground' : 'text-foreground'} text-sm font-medium flex-1`}>
             <span className="mr-2">{activity.icon}</span>
             {activity.message}

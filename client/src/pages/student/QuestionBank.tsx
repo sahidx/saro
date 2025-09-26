@@ -6,52 +6,58 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, BookOpen, ExternalLink, FolderOpen, ChevronRight } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-// Updated NCTB Chapter structure from official curriculum
+// Updated NCTB Chapter structure for Science & Math curriculum
 const CHAPTER_STRUCTURE = {
   '9-10': {
-    chemistry: [
-      'রসায়নের ধারণা',
-      'পদার্থের গঠন',
-      'পরমাণুর গঠন',
-      'পর্যায় সারণী ও মৌলের পর্যায়বৃত্ত ধর্ম',
-      'রাসায়নিক বন্ধন',
-      'রাসায়নিক বিক্রিয়া',
-      'মোলের ধারণা ও রাসায়নিক গণনা',
-      'অম্ল, ক্ষার ও লবণ',
-      'খনিজ সম্পদ: ধাতু ও অধাতু',
-      'বিদ্যুৎ ও রসায়ন (তড়িৎ রসায়ন)',
-      'আমাদের জীবনে রসায়ন'
+    science: [
+      'বৈজ্ঞানিক পদ্ধতি ও পরিমাপ',
+      'পদার্থের গাঠনিক ধারণা',
+      'বল ও গতি',
+      'তাপ ও তাপগতিবিদ্যা',
+      'আলো',
+      'বিদ্যুৎ ও চুম্বকত্ব',
+      'জীবকোষ ও টিস্যু',
+      'মানব দেহের বিভিন্ন ব্যবস্থা',
+      'উদ্ভিদের পরিপাক ও পরিবহণ',
+      'পরিবেশ ও বাস্তুতন্ত্র'
     ],
-    ict: [
-      'তথ্য ও যোগাযোগ প্রযুক্তি পরিচিতি',
-      'ICT-এর ভূমিকা ও প্রয়োজনীয়তা',
-      'তথ্য ও সমাজ',
-      'ICT-এ নৈতিকতা ও ডিজিটাল নাগরিকত্ব',
-      'উদীয়মান প্রযুক্তি প্রবণতা'
+    math: [
+      'বাস্তব সংখ্যা ও সেট',
+      'বীজগাণিতিক রাশি ও উৎপাদক',
+      'সমীকরণ ও অসমতা',
+      'সূচক ও লগারিদম',
+      'ব্যঞ্জক সরলীকরণ',
+      'জ্যামিতি (ত্রিভুজ, বৃত্ত)',
+      'ত্রিকোণমিতি পরিচিতি',
+      'সমন্বয় জ্যামিতি',
+      'সম্ভাব্যতা ও পরিসংখ্যান',
+      'বীজগণিতের প্রয়োগ'
     ]
   },
   '11-12': {
-    chemistry: [
-      // 1st Paper
-      'ল্যাবরেটরির নিরাপদ ব্যবহার',
-      'গুণগত রসায়ন',
-      'মৌলের পর্যায়বৃত্ত ধর্ম ও রাসায়নিক বন্ধন',
-      'রাসায়নিক পরিবর্তন',
-      'কর্মমুখী রসায়ন',
-      // 2nd Paper
-      'পরিবেশ রসায়ন',
-      'জৈব রসায়ন',
-      'পরিমাণগত রসায়ন',
-      'তড়িৎ রসায়ন',
-      'অর্থনৈতিক রসায়ন'
+    science: [
+      'ভৌত রাশির পরিমাপ',
+      'এক ও দ্বি মাত্রিক গতি',
+      'নিউটনের গতিসূত্র',
+      'কাজ, শক্তি ও ক্ষমতা',
+      'গ্যাসের গতিতত্ত্ব',
+      'স্থির তড়িৎ',
+      'চল তড়িৎ',
+      'চুম্বক ক্ষেত্র ও তড়িৎচুম্বকত্ব',
+      'আধুনিক পদার্থবিজ্ঞান পরিচিতি',
+      'জীবপ্রযুক্তি ও পরিবেশ'
     ],
-    ict: [
-      'তথ্য ও যোগাযোগ প্রযুক্তি — বিশ্ব ও বাংলাদেশের প্রেক্ষাপটে',
-      'কমিউনিকেশন সিস্টেম ও কম্পিউটার নেটওয়ার্কিং',
-      'সংখ্যা পদ্ধতি ও ডিজিটাল ডিভাইস',
-      'ওয়েব ডিজাইন পরিচিতি ও HTML',
-      'প্রোগ্রামিং ভাষার ভিত্তি',
-      'ডেটাবেজ ম্যানেজমেন্ট সিস্টেম'
+    math: [
+      'উচ্চতর সমীকরণ',
+      'ক্রম ও শ্রেণি',
+      'সীমা ও অন্তরকলন',
+      'ইন্টিগ্রেশন',
+      'ভেক্টর',
+      'ত্রিকোণমিতিক বিস্তার',
+      'স্থিরাংক জ্যামিতি',
+      'সম্ভাব্যতা বিতরণ',
+      'ম্যাট্রিক্স ও ডিটারমিন্যান্ট',
+      'রৈখিক প্রোগ্রামিং পরিচিতি'
     ]
   }
 };
@@ -133,7 +139,7 @@ export default function StudentQuestionBank() {
   };
 
   const getSubjectName = (subject: string) => {
-    return subject === 'chemistry' ? 'রসায়ন' : 'তথ্য ও যোগাযোগ প্রযুক্তি';
+    return subject === 'science' ? 'বিজ্ঞান' : 'গণিত';
   };
 
   const getClassDisplayName = (classLevel: string) => {
@@ -144,12 +150,12 @@ export default function StudentQuestionBank() {
   const getAvailableChapters = () => {
     if (!selectedClass || !selectedSubject) return [];
     
-    return CHAPTER_STRUCTURE[selectedClass as keyof typeof CHAPTER_STRUCTURE]?.[selectedSubject as 'chemistry' | 'ict'] || [];
+    return CHAPTER_STRUCTURE[selectedClass as keyof typeof CHAPTER_STRUCTURE]?.[selectedSubject as 'science' | 'math'] || [];
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-gray-50 to-cyan-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-gray-50 to-purple-50">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
           <p className="text-gray-600">প্রশ্নব্যাংক লোড হচ্ছে...</p>
@@ -159,7 +165,7 @@ export default function StudentQuestionBank() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-purple-50">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
         <div className="px-4 py-3">
@@ -228,8 +234,8 @@ export default function StudentQuestionBank() {
                     <SelectValue placeholder="বিষয় নির্বাচন করুন" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="chemistry">রসায়ন</SelectItem>
-                    <SelectItem value="ict">তথ্য ও যোগাযোগ প্রযুক্তি</SelectItem>
+                    <SelectItem value="science">বিজ্ঞান</SelectItem>
+                    <SelectItem value="math">গণিত</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

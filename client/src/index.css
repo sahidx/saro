@@ -1,99 +1,111 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@100;200;300;400;500;600;700;800;900&family=Kalpurush&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  /* Professional Education Theme - Enhanced Visibility */
   --background: hsl(0, 0%, 100%);
-  --foreground: hsl(0, 0%, 3%);
+  --foreground: hsl(222, 24%, 12%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(0, 0%, 3%);
+  --card-foreground: hsl(222, 24%, 12%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(0, 0%, 3%);
-  --primary: hsl(196, 100%, 45%);
-  --primary-foreground: hsl(0, 0%, 98%);
-  --secondary: hsl(0, 0%, 96%);
-  --secondary-foreground: hsl(0, 0%, 9%);
-  --muted: hsl(0, 0%, 96%);
-  --muted-foreground: hsl(0, 0%, 45%);
-  --accent: hsl(196, 100%, 45%);
-  --accent-foreground: hsl(0, 0%, 9%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --border: hsl(0, 0%, 89%);
-  --input: hsl(0, 0%, 89%);
-  --ring: hsl(196, 100%, 45%);
-  --chart-1: hsl(196, 100%, 45%);
-  --chart-2: hsl(173, 58%, 39%);
-  --chart-3: hsl(197, 37%, 24%);
-  --chart-4: hsl(43, 74%, 66%);
-  --chart-5: hsl(27, 87%, 67%);
-  --sidebar: hsl(0, 0%, 98%);
-  --sidebar-foreground: hsl(0, 0%, 9%);
-  --sidebar-primary: hsl(196, 100%, 45%);
+  --popover-foreground: hsl(222, 24%, 12%);
+  --primary: hsl(220, 100%, 25%);       /* Strong Deep Blue - High Contrast */
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 30%, 95%);
+  --secondary-foreground: hsl(222, 24%, 12%);
+  --muted: hsl(210, 30%, 92%);
+  --muted-foreground: hsl(215, 25%, 40%);
+  --accent: hsl(38, 95%, 50%);          /* Bright Gold - High Visibility */
+  --accent-foreground: hsl(222, 24%, 12%);
+  --destructive: hsl(0, 90%, 50%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(214, 25%, 85%);
+  --input: hsl(214, 25%, 90%);
+  --ring: hsl(220, 100%, 25%);
+  --chart-1: hsl(220, 100%, 25%);
+  --chart-2: hsl(38, 95%, 50%);
+  --chart-3: hsl(142, 85%, 35%);
+  --chart-4: hsl(220, 85%, 40%);
+  --chart-5: hsl(197, 85%, 45%);
+  
+  /* Enhanced Design System for Better Visibility */
+  --gradient-primary: linear-gradient(135deg, hsl(220, 100%, 25%) 0%, hsl(220, 85%, 40%) 100%);
+  --gradient-secondary: linear-gradient(135deg, hsl(38, 95%, 50%) 0%, hsl(35, 90%, 45%) 100%);
+  --gradient-hero: linear-gradient(135deg, hsl(220, 100%, 20%) 0%, hsl(220, 85%, 35%) 50%, hsl(38, 95%, 50%) 100%);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.16);
+  --chart-5: hsl(340, 75%, 55%);
+  --sidebar: hsl(210, 40%, 98%);
+  --sidebar-foreground: hsl(210, 40%, 15%);
+  --sidebar-primary: hsl(210, 100%, 50%);
   --sidebar-primary-foreground: hsl(0, 0%, 98%);
-  --sidebar-accent: hsl(0, 0%, 96%);
-  --sidebar-accent-foreground: hsl(0, 0%, 9%);
-  --sidebar-border: hsl(0, 0%, 89%);
-  --sidebar-ring: hsl(196, 100%, 45%);
+  --sidebar-accent: hsl(210, 40%, 96%);
+  --sidebar-accent-foreground: hsl(210, 40%, 15%);
+  --sidebar-border: hsl(210, 40%, 91%);
+  --sidebar-ring: hsl(210, 100%, 50%);
   --font-sans: Inter, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   --surface: hsl(0, 0%, 100%);
-  /* High contrast theme colors */
-  --contrast-light: hsl(0, 0%, 100%);
-  --contrast-medium: hsl(0, 0%, 89%);
-  --contrast-dark: hsl(0, 0%, 20%);
-  --contrast-accent: hsl(196, 100%, 45%);
-  --contrast-text: hsl(0, 0%, 3%);
-  --contrast-muted: hsl(0, 0%, 45%);
+  /* Math and Science theme colors */
+  --contrast-light: hsl(210, 40%, 98%);
+  --contrast-medium: hsl(210, 40%, 91%);
+  --contrast-dark: hsl(210, 40%, 8%);
+  --contrast-accent: hsl(210, 100%, 50%);
+  --contrast-text: hsl(210, 40%, 8%);
+  --contrast-muted: hsl(210, 20%, 45%);
 }
 
 .dark {
-  --background: hsl(220, 13%, 9%);
-  --foreground: hsl(0, 0%, 98%);
-  --card: hsl(220, 13%, 12%);
-  --card-foreground: hsl(0, 0%, 95%);
-  --popover: hsl(220, 13%, 12%);
-  --popover-foreground: hsl(0, 0%, 95%);
-  --primary: hsl(196, 100%, 55%);
-  --primary-foreground: hsl(220, 13%, 9%);
-  --secondary: hsl(220, 13%, 18%);
-  --secondary-foreground: hsl(0, 0%, 95%);
-  --muted: hsl(220, 13%, 18%);
-  --muted-foreground: hsl(0, 0%, 70%);
-  --accent: hsl(196, 100%, 60%);
-  --accent-foreground: hsl(220, 13%, 9%);
+  --background: hsl(222.2, 84%, 4.9%);
+  --foreground: hsl(210, 40%, 98%);
+  --card: hsl(222.2, 84%, 4.9%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(210, 50%, 4%);
+  --popover-foreground: hsl(210, 20%, 98%);
+  --primary: hsl(210, 100%, 60%);
+  --primary-foreground: hsl(210, 50%, 4%);
+  --secondary: hsl(210, 50%, 12%);
+  --secondary-foreground: hsl(210, 20%, 98%);
+  --muted: hsl(210, 50%, 12%);
+  --muted-foreground: hsl(210, 20%, 64%);
+  --accent: hsl(160, 60%, 50%);
+  --accent-foreground: hsl(210, 50%, 4%);
   --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --border: hsl(220, 13%, 20%);
-  --input: hsl(220, 13%, 18%);
-  --ring: hsl(196, 100%, 55%);
-  --chart-1: hsl(196, 100%, 55%);
-  --chart-2: hsl(173, 58%, 59%);
-  --chart-3: hsl(197, 37%, 44%);
-  --chart-4: hsl(43, 74%, 76%);
-  --chart-5: hsl(27, 87%, 77%);
-  --sidebar: hsl(220, 13%, 9%);
+  --destructive-foreground: hsl(210, 20%, 98%);
+  --border: hsl(210, 50%, 12%);
+  --input: hsl(210, 50%, 12%);
+  --ring: hsl(210, 100%, 60%);
+  --chart-1: hsl(210, 100%, 60%);
+  --chart-2: hsl(160, 60%, 50%);
+  --chart-3: hsl(195, 80%, 45%);
+  --chart-4: hsl(280, 70%, 65%);
+  --chart-5: hsl(340, 75%, 65%);
+  --sidebar: hsl(210, 50%, 4%);
   --sidebar-foreground: hsl(0, 0%, 95%);
-  --sidebar-primary: hsl(196, 100%, 55%);
-  --sidebar-primary-foreground: hsl(220, 13%, 9%);
-  --sidebar-accent: hsl(220, 13%, 18%);
+  --sidebar-primary: hsl(210, 100%, 65%);
+  --sidebar-primary-foreground: hsl(210, 50%, 4%);
+  --sidebar-accent: hsl(210, 50%, 12%);
   --sidebar-accent-foreground: hsl(0, 0%, 95%);
-  --sidebar-border: hsl(220, 13%, 20%);
-  --sidebar-ring: hsl(196, 100%, 55%);
+  --sidebar-border: hsl(210, 50%, 15%);
+  --sidebar-ring: hsl(210, 100%, 65%);
   --font-sans: Inter, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: 0.5rem;
-  --surface: hsl(220, 13%, 12%);
-  /* Enhanced dark theme colors with better contrast */
-  --contrast-light: hsl(220, 13%, 18%);
-  --contrast-medium: hsl(220, 13%, 30%);
+  --surface: hsl(210, 50%, 8%);
+  /* Math and Science dark theme colors */
+  --contrast-light: hsl(210, 50%, 12%);
+  --contrast-medium: hsl(210, 50%, 25%);
   --contrast-dark: hsl(0, 0%, 85%);
-  --contrast-accent: hsl(196, 100%, 60%);
+  --contrast-accent: hsl(210, 100%, 70%);
   --contrast-text: hsl(0, 0%, 95%);
   --contrast-muted: hsl(0, 0%, 70%);
 }
@@ -105,6 +117,206 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+
+/* Bengali Font Classes */
+.font-bengali {
+  font-family: 'Noto Sans Bengali', 'SolaimanLipi', 'Kalpurush', 'Nikosh', sans-serif;
+  font-weight: 400;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
+.bangla-text {
+  font-family: 'Noto Sans Bengali', 'SolaimanLipi', 'Kalpurush', 'Nikosh', sans-serif;
+  font-weight: 400;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
+/* Enhanced Bengali Typography */
+.bengali-heading {
+  font-family: 'Noto Sans Bengali', 'SolaimanLipi', 'Kalpurush', 'Nikosh', sans-serif;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+.bengali-body {
+  font-family: 'Noto Sans Bengali', 'SolaimanLipi', 'Kalpurush', 'Nikosh', sans-serif;
+  font-weight: 400;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+}
+
+/* Enhanced Professional Design System Components */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(220, 220, 220, 0.6);
+  border-radius: 16px;
+  box-shadow: var(--shadow-medium);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(245, 158, 11, 0.8);
+  box-shadow: var(--shadow-strong);
+  transform: translateY(-3px);
+}
+
+.gradient-bg-primary {
+  background: var(--gradient-primary);
+}
+
+.gradient-bg-secondary {
+  background: var(--gradient-secondary);
+}
+
+.gradient-bg-hero {
+  background: var(--gradient-hero);
+}
+
+.modern-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: var(--shadow-medium);
+  border: 1px solid hsl(214, 32%, 91%);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.modern-card:hover {
+  box-shadow: var(--shadow-strong);
+  transform: translateY(-4px);
+}
+
+/* Enhanced Text Visibility Classes */
+.hero-title {
+  color: white;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+  font-weight: 800;
+}
+
+.hero-subtitle {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+  font-weight: 500;
+}
+
+.hero-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+.modern-card:hover {
+  box-shadow: var(--shadow-strong);
+  transform: translateY(-4px) scale(1.02);
+  border-color: hsl(262, 83%, 58%);
+}
+
+.hero-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  box-shadow: 
+    0 8px 32px rgba(99, 102, 241, 0.12),
+    0 2px 6px rgba(99, 102, 241, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.floating-element {
+  animation: float 4s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Enhanced animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-8px) rotate(1deg); }
+  66% { transform: translateY(-4px) rotate(-1deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
+  }
+}  /* Mixed content styling for questions */
+  .question-content {
+    font-family: 'Noto Sans Bengali', 'Kalpurush', Inter, Arial, sans-serif;
+    line-height: 1.7;
+    font-size: 1.1em;
+  }
+
+  /* MathJax styling */
+  mjx-container {
+    display: inline-block !important;
+    margin: 0.2em 0 !important;
+  }
+
+  mjx-container[display="true"] {
+    display: block !important;
+    text-align: center !important;
+    margin: 1em 0 !important;
+  }
+
+  /* Scientific equation styling */
+  .math-equation {
+    font-family: 'Computer Modern', 'Latin Modern Math', serif;
+  }
+
+  /* Mobile exam interface optimizations */
+  @media (max-width: 640px) {
+    .exam-option-label {
+      min-height: 44px; /* Touch target size */
+      padding: 12px 16px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    
+    .exam-nav-button {
+      min-height: 44px;
+      min-width: 44px;
+      touch-action: manipulation;
+    }
+    
+    .exam-question-text {
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 16px 0;
+    }
+  }
+
+  /* Touch-friendly radio buttons */
+  [data-radix-collection-item] {
+    min-height: 44px;
+    min-width: 44px;
   }
   
   html {

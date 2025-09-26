@@ -105,7 +105,7 @@ export default function StudentResults() {
       <MobileWrapper>
         <div className={`min-h-screen flex items-center justify-center ${isDarkMode 
           ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' 
-          : 'bg-gradient-to-br from-white via-gray-50 to-cyan-50'
+          : 'bg-gradient-to-br from-white via-gray-50 to-purple-50'
         }`}>
           <div className="text-center">
             <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
@@ -123,7 +123,7 @@ export default function StudentResults() {
       <MobileWrapper>
         <div className={`min-h-screen flex items-center justify-center ${isDarkMode 
           ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' 
-          : 'bg-gradient-to-br from-white via-gray-50 to-cyan-50'
+          : 'bg-gradient-to-br from-white via-gray-50 to-purple-50'
         }`}>
           <div className="text-center space-y-4">
             <Trophy className="w-16 h-16 mx-auto text-red-500" />
@@ -160,7 +160,7 @@ export default function StudentResults() {
     <MobileWrapper>
       <div className={`min-h-screen ${isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' 
-        : 'bg-gradient-to-br from-white via-gray-50 to-cyan-50'
+        : 'bg-gradient-to-br from-white via-gray-50 to-purple-50'
       } transition-colors duration-300`}>
         
         {/* Mobile Header */}

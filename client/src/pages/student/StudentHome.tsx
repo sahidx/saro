@@ -82,7 +82,7 @@ export default function StudentHome() {
     <MobileWrapper>
       <div className={`min-h-screen ${isDarkMode 
         ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800' 
-        : 'bg-gradient-to-br from-white via-gray-50 to-cyan-50'
+        : 'bg-gradient-to-br from-white via-gray-50 to-purple-50'
       } transition-colors duration-300`}>
         
         {/* Header */}
@@ -176,11 +176,11 @@ export default function StudentHome() {
           {/* Welcome Content */}
           <div className="space-y-6 px-1">
             <Card className={`force-mobile-card ${isDarkMode 
-              ? 'bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-400/30' 
-              : 'bg-gradient-to-br from-emerald-50 to-cyan-50 border border-emerald-200 shadow-lg'
+              ? 'bg-gradient-to-br from-emerald-500/10 to-purple-500/10 border border-emerald-400/30' 
+              : 'bg-gradient-to-br from-emerald-50 to-purple-50 border border-emerald-200 shadow-lg'
             }`}>
               <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <div className="w-16 h-16 bg-gradient-to-r from-emerald-400 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                   <Users className="w-8 h-8 text-white" />
                 </div>
                 <h2 className={`text-2xl font-bold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>

@@ -194,7 +194,7 @@ export default function StudentQuestionBank() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-gray-50 to-cyan-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-gray-50 to-purple-50">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
           <p className="text-gray-600">Loading Question Bank...</p>
@@ -204,7 +204,7 @@ export default function StudentQuestionBank() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-purple-50">
       {/* Mobile-friendly header with back button */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
         <div className="px-4 py-3">
