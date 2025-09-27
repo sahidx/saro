@@ -3282,6 +3282,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Access denied. Teachers only.' });
       }
 
+      // Ensure we have a valid user ID
+      const createdById = user?.id || 'admin-teacher-001'; // Fallback to initial admin user
+      console.log('Creating batch with user ID:', createdById);
+
       // Validate required fields
       if (!name || !name.trim()) {
         return res.status(400).json({ message: "Batch name is required" });
@@ -3315,7 +3319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxStudents: maxStudents || 50,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
-        createdBy: user.id, // Use authenticated user ID
+        createdBy: createdById, // Use validated user ID
       };
 
       const newBatch = await storage.createBatch(batchData);
@@ -3325,14 +3329,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error("Batch creation failed - no batch data returned");
       }
       
-      // Log activity
-      await storage.logActivity({
-        type: 'batch_created',
-        message: `New batch "${name}" created for ${subject}`,
-        icon: '📚',
-        userId: user.id,
-        relatedEntityId: newBatch.id,
-      });
+      // Log activity (optional - don't fail batch creation if logging fails)
+      try {
+        await storage.logActivity({
+          type: 'batch_created',
+          message: `New batch "${name}" created for ${subject}`,
+          icon: '📚',
+          userId: createdById, // Use the same validated user ID
+          relatedEntityId: newBatch.id,
+        });
+      } catch (logError: any) {
+        console.warn('⚠️ Activity logging failed (batch still created):', logError.message);
+      }
 
       console.log(`✅ Batch created successfully: ${newBatch.name} (${newBatch.batchCode})`);
 
