@@ -20,42 +20,41 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Install build tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential python3 make g++ gcc libsqlite3-dev
-
       - name: Deploy to VPS
         run: |
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
               set -e
-              cd /var/www/saro &&
-              git fetch origin main &&
-              git reset --hard origin/main &&
+              cd /var/www/saro || (mkdir -p /var/www/saro && cd /var/www/saro)
 
-              # Write production environment variables
-              echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' > .env.production
-              echo 'NODE_ENV=production' >> .env.production
-              echo 'PORT=5000' >> .env.production
-              echo 'SESSION_SECRET=${{ secrets.SESSION_SECRET }}' >> .env.production
+              # Pull latest code
+              if [ -d .git ]; then
+                git fetch origin main
+                git reset --hard origin/main
+              else
+                git clone https://github.com/sahidx/saro.git .
+              fi
 
-              # Clean + install dependencies
+              # Write .env.production
+              cat > .env.production <<EOL
+DATABASE_URL=${{ secrets.DATABASE_URL }}
+NODE_ENV=production
+PORT=5000
+SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+EOL
+
+              # Clean & install deps
               rm -rf node_modules package-lock.json
-              npm install
+              npm install --legacy-peer-deps
 
-              # Make sure drizzle packages exist
-              npm install drizzle-orm --save
-              npm install drizzle-kit --save-dev
+              # Build both client + server
+              npm run build:all
 
-              # Build project
-              npm run build
+              # Run DB migrations (ignore failure)
+              npm run db:push || echo '⚠️ Migration failed, continuing...'
 
-              # Run database migrations (don’t stop deploy if fails)
-              npx drizzle-kit push || echo '⚠️ Migration failed, continuing...'
-
-              # Restart PM2 with env file
+              # Restart app
               pm2 delete saro || true
-              pm2 start dist/index.js --name saro -f --env production --update-env
+              pm2 start dist/index.js --name saro --update-env -f
               pm2 save
           "
