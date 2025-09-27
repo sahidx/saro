@@ -1276,7 +1276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (dbError) {
         // Fallback when database fails - return sample exam result
         console.log('📝 Database unavailable, returning sample exam result');
-        logTemporaryEndpoint('online exam results');
+
         
         const mockResult = {
           id: `mock-result-${Date.now()}`,
@@ -3325,7 +3325,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (dbError) {
         // Fallback when database fails - return mock successful response
         console.log("📚 Database error creating batch, using fallback:", dbError);
-        logTemporaryEndpoint('batch creation');
         
         const mockBatch = {
           id: `batch-${Date.now()}`,
@@ -5716,7 +5715,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all courses (public endpoint for landing page)
   app.get('/api/courses', async (req, res) => {
     try {
-      logTemporaryEndpoint('courses');
       res.json(tempCourses.filter(c => c.isActive));
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -5727,7 +5725,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all courses for teacher management (bypass auth for now)
   app.get('/api/teacher/courses', async (req, res) => {
     try {
-      logTemporaryEndpoint('courses');
       res.json(tempCourses);
     } catch (error) {
       console.error('Error fetching courses for teacher:', error);
@@ -5738,7 +5735,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new course
   app.post('/api/teacher/courses', async (req, res) => {
     try {
-      logTemporaryEndpoint('course creation');
+
       
       // Create new temporary course
       const newCourse = {
@@ -5766,7 +5763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update course
   app.put('/api/teacher/courses/:id', async (req, res) => {
     try {
-      logTemporaryEndpoint('course update');
+
       
       const courseId = req.params.id;
       const updateData = req.body;
@@ -5802,7 +5799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete course
   app.delete('/api/teacher/courses/:id', async (req, res) => {
     try {
-      logTemporaryEndpoint('course deletion');
+
       
       const courseId = req.params.id;
       
@@ -5859,7 +5856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get teacher profile
   app.get('/api/teacher/profile', async (req, res) => {
     try {
-      logTemporaryEndpoint('profile');
+
       res.json(tempTeacherProfile);
     } catch (error) {
       console.error('Error fetching teacher profile:', error);
@@ -5870,8 +5867,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create or update teacher profile
   app.put('/api/teacher/profile', async (req, res) => {
     try {
-      logTemporaryEndpoint('profile update');
-      
       // Update the temporary profile with new data
       tempTeacherProfile = {
         ...tempTeacherProfile,
@@ -5893,8 +5888,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile picture upload endpoint
   app.post('/api/teacher/profile/upload-picture', async (req, res) => {
     try {
-      logTemporaryEndpoint('picture upload');
-      
       const { imageData } = req.body;
       
       if (!imageData) {
@@ -6046,8 +6039,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile picture delete endpoint
   app.delete('/api/teacher/profile/delete-picture', async (req, res) => {
     try {
-      logTemporaryEndpoint('picture delete');
-      
       // Remove from temporary storage
       const userId = 'teacher-belal-sir';
       tempImageStorage.delete(userId);
@@ -6126,8 +6117,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get public teacher profiles (for landing page)
   app.get('/api/teacher-profiles', async (req, res) => {
     try {
-      logTemporaryEndpoint('teacher profiles');
-      
       // Return public profiles only
       const publicProfiles = tempTeacherProfile.isPublic ? [tempTeacherProfile] : [];
       res.json(publicProfiles);

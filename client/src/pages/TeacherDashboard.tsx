@@ -115,7 +115,7 @@ function AIQuestionMaker({ isDarkMode }: AIQuestionMakerProps) {
             Praggo AI Question Generator
           </CardTitle>
           <CardDescription className={isDarkMode ? 'text-blue-200' : 'text-orange-600'}>
-            Generate Mathematics and Science questions using Praggo AI for your exams
+            Generate Math, Science, and Higher Math questions using Praggo AI for your exams
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -131,8 +131,9 @@ function AIQuestionMaker({ isDarkMode }: AIQuestionMakerProps) {
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="mathematics">Mathematics</SelectItem>
+                    <SelectItem value="math">Math</SelectItem>
                     <SelectItem value="science">Science</SelectItem>
+                    <SelectItem value="higher-math">Higher Math</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -911,11 +912,11 @@ export default function TeacherDashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Mathematics Question Bank */}
+              {/* Math Question Bank */}
               <Card className={`${isDarkMode ? 'bg-card border-2 border-primary/30' : 'bg-card border-2 border-primary/20 shadow-lg'}`}>
                 <CardHeader>
-                  <CardTitle className={`${isDarkMode ? 'text-primary' : 'text-primary'} font-bold`}>Mathematics Question Bank</CardTitle>
-                  <CardDescription className={`${isDarkMode ? 'text-muted-foreground' : 'text-muted-foreground'} font-medium`}>Manage mathematics questions and resources</CardDescription>
+                  <CardTitle className={`${isDarkMode ? 'text-primary' : 'text-primary'} font-bold`}>Math Question Bank</CardTitle>
+                  <CardDescription className={`${isDarkMode ? 'text-muted-foreground' : 'text-muted-foreground'} font-medium`}>Manage math questions and resources</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
@@ -923,7 +924,7 @@ export default function TeacherDashboard() {
                       <div className="flex items-center space-x-3">
                         <FileText className="w-5 h-5 text-green-600" />
                         <div>
-                          <div className={`${isDarkMode ? 'text-foreground' : 'text-foreground'} font-medium`}>Mathematics MCQ Set 1</div>
+                          <div className={`${isDarkMode ? 'text-foreground' : 'text-foreground'} font-medium`}>Math MCQ Set 1</div>
                           <div className="text-green-600 text-sm font-semibold">Google Drive</div>
                         </div>
                       </div>
@@ -958,7 +959,7 @@ export default function TeacherDashboard() {
                   
                   <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white border border-purple-500/50">
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Mathematics Resource
+                    Add Math Resource
                   </Button>
                 </CardContent>
               </Card>
@@ -1007,7 +1008,7 @@ export default function TeacherDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className={`text-center p-4 rounded-lg ${isDarkMode ? 'bg-secondary' : 'bg-secondary'}`}>
                     <div className="text-2xl font-bold text-green-600">2</div>
-                    <div className={`text-sm ${isDarkMode ? 'text-muted-foreground' : 'text-muted-foreground'} font-medium`}>Mathematics Resources</div>
+                    <div className={`text-sm ${isDarkMode ? 'text-muted-foreground' : 'text-muted-foreground'} font-medium`}>Math Resources</div>
                   </div>
                   <div className={`text-center p-4 rounded-lg ${isDarkMode ? 'bg-secondary' : 'bg-secondary'}`}>
                     <div className="text-2xl font-bold text-purple-600">1</div>
