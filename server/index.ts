@@ -70,8 +70,8 @@ app.use((req, _res, next) => {
       const val = req.body[key];
       if (typeof val === "string") {
         req.body[key] = val
-          .replace(/<script[^>]*>.*?<\/script>/gis, "")
-          .replace(/<iframe[^>]*>.*?<\/iframe>/gis, "")
+          .replace(/<script[^>]*>.*?<\/script>/gi, "")
+          .replace(/<iframe[^>]*>.*?<\/iframe>/gi, "")
           .replace(/javascript:/gi, "")
           .replace(/on\w+\s*=/gi, "");
       }
@@ -181,17 +181,38 @@ app.use(async (req, res, next) => {
 });
 
 (async () => {
-  // Initialize database for production only
-  if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
+  // Initialize database for both development and production
+  if (process.env.DATABASE_URL) {
     try {
+      console.log('🚀 Initializing database...');
+      
+      // Auto-run database migration
+      const { execSync } = await import('child_process');
+      try {
+        console.log('📋 Running database migrations...');
+        execSync('npm run db:push', { 
+          stdio: 'inherit',
+          cwd: process.cwd(),
+          timeout: 60000 
+        });
+        console.log('✅ Database migrations completed');
+      } catch (migrationError) {
+        console.warn('⚠️ Migration failed, trying to continue:', migrationError);
+      }
+      
+      // Initialize database with seed data if needed
       const { safeInitializeDatabase } = await import('./production-db');
       await safeInitializeDatabase();
+      
+      console.log('🎉 Database initialization complete!');
+      
     } catch (error) {
-      console.error('💥 Failed to initialize database:', error);
-      // Continue startup even if DB init fails - fallback to mock data
+      console.error('💥 Database initialization failed:', error);
+      console.log('🔄 Server will continue, but database features may not work properly');
+      console.log('💡 Ensure PostgreSQL is running and DATABASE_URL is correct');
     }
-  } else if (process.env.NODE_ENV === 'development') {
-    log('🔧 Development mode: Skipping database initialization');
+  } else {
+    console.warn('⚠️ DATABASE_URL not provided - database features will not work');
   }
 
   // Register all routes (they can read loginLimiter via app.get('loginLimiter'))

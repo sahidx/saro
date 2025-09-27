@@ -150,11 +150,19 @@ async function handleQuestionContent(content: string, source: string): Promise<s
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize database with real data - handle errors gracefully
   try {
-    const { seedDatabase } = await import('./seedData');
-    await seedDatabase();
+    // Only seed if database is properly initialized
+    const { dbHealthCheck } = await import('./db');
+    const health = await dbHealthCheck();
+    
+    if (health.status === 'healthy') {
+      const { seedDatabase } = await import('./seedData');
+      await seedDatabase();
+      console.log('✅ Database seeding completed');
+    } else {
+      console.log("⚠️ Database not healthy, skipping seeding");
+    }
   } catch (error) {
-    console.log("⚠️  Database seeding skipped due to endpoint issue - continuing with server start...");
-    console.log("📝 Note: You can manually add courses through the course management interface.");
+    console.log("⚠️ Database seeding skipped - will be handled by automatic initialization");
   }
 
   // Skip Replit authentication - use only custom session-based auth
@@ -3216,45 +3224,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all batches with fallback
+  // Get all batches - Production ready with auto-initialization
   app.get("/api/batches", async (req: any, res) => {
     try {
       // Get real batches with dynamic student counts from database
-      try {
-        const batches = await storage.getAllBatches();
-        
-        // Add dynamic student count for each batch
-        const batchesWithStudentCount = await Promise.all(
-          batches.map(async (batch) => {
-            try {
-              const students = await storage.getStudentsByBatch(batch.id);
-              return {
-                ...batch,
-                currentStudents: students.length,
-                students: students.length // For compatibility
-              };
-            } catch (studentError) {
-              console.warn(`Failed to get students for batch ${batch.id}:`, studentError);
-              return {
-                ...batch,
-                currentStudents: 0,
-                students: 0
-              };
-            }
-          })
-        );
-        
-        console.log('📚 Batches with student counts:', batchesWithStudentCount.map(b => ({ id: b.id, name: b.name, students: b.currentStudents })));
-        res.json(batchesWithStudentCount);
-      } catch (dbError) {
-        // Database unavailable - return empty array, no fake data
-        console.log("❌ Database unavailable - returning empty batch list");
-        console.log("Database error:", dbError);
-        res.json([]);
-      }
+      const batches = await storage.getAllBatches();
+      
+      // Add dynamic student count for each batch
+      const batchesWithStudentCount = await Promise.all(
+        batches.map(async (batch) => {
+          try {
+            const students = await storage.getStudentsByBatch(batch.id);
+            return {
+              ...batch,
+              currentStudents: students.length,
+              students: students.length // For compatibility
+            };
+          } catch (studentError) {
+            console.warn(`Failed to get students for batch ${batch.id}:`, studentError);
+            return {
+              ...batch,
+              currentStudents: 0,
+              students: 0
+            };
+          }
+        })
+      );
+      
+      console.log('📚 Batches retrieved:', batchesWithStudentCount.map(b => ({ id: b.id, name: b.name, students: b.currentStudents })));
+      res.json(batchesWithStudentCount);
+      
     } catch (error) {
       console.error("Error fetching batches:", error);
-      res.status(500).json({ message: "Failed to fetch batches" });
+      
+      // If database error, try to initialize and retry once
+      try {
+        console.log('🔄 Attempting database initialization...');
+        const { safeInitializeDatabase } = await import('./production-db');
+        await safeInitializeDatabase();
+        
+        // Retry after initialization
+        const batches = await storage.getAllBatches();
+        res.json(batches);
+        
+      } catch (initError) {
+        console.error("Failed to initialize database:", initError);
+        res.status(500).json({ 
+          message: "Database not available. Please ensure PostgreSQL is running and configured properly.",
+          error: (error as Error).message 
+        });
+      }
     }
   });
 
@@ -3299,58 +3318,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: user.id, // Use authenticated user ID
       };
 
-      try {
-        const newBatch = await storage.createBatch(batchData);
-        
-        // Verify batch was created successfully
-        if (!newBatch || !newBatch.id) {
-          throw new Error("Batch creation failed - no batch data returned");
-        }
-        
-        // Log activity
-        await storage.logActivity({
-          type: 'batch_created',
-          message: `New batch "${name}" created for ${subject}`,
-          icon: '📚',
-          userId: user.id,
-          relatedEntityId: newBatch.id,
-        });
-
-        console.log(`✅ Batch created successfully: ${newBatch.name} (${newBatch.batchCode})`);
-
-        res.json({
-          ...newBatch,
-          password, // Include password in response for teacher to share
-        });
-      } catch (dbError) {
-        // Fallback when database fails - return mock successful response
-        console.log("📚 Database error creating batch, using fallback:", dbError);
-        
-        const mockBatch = {
-          id: `batch-${Date.now()}`,
-          name: batchData.name,
-          subject: batchData.subject,
-          batchCode,
-          password,
-          classTime: batchData.classTime,
-          classDays: batchData.classDays,
-          maxStudents: batchData.maxStudents,
-          currentStudents: 0,
-          startDate: batchData.startDate,
-          endDate: batchData.endDate,
-          status: 'active',
-          createdBy: batchData.createdBy,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-
-        console.log(`✅ Mock batch created: ${mockBatch.name} (${mockBatch.batchCode})`);
-        res.json({
-          ...mockBatch,
-          password,
-          _fallback: true // Indicate this is a fallback response
-        });
+      const newBatch = await storage.createBatch(batchData);
+      
+      // Verify batch was created successfully
+      if (!newBatch || !newBatch.id) {
+        throw new Error("Batch creation failed - no batch data returned");
       }
+      
+      // Log activity
+      await storage.logActivity({
+        type: 'batch_created',
+        message: `New batch "${name}" created for ${subject}`,
+        icon: '📚',
+        userId: user.id,
+        relatedEntityId: newBatch.id,
+      });
+
+      console.log(`✅ Batch created successfully: ${newBatch.name} (${newBatch.batchCode})`);
+
+      res.json({
+        ...newBatch,
+        password, // Include password in response for teacher to share
+      });
     } catch (error: any) {
       console.error("❌ Error creating batch:", error);
       
