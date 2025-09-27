@@ -3227,6 +3227,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all batches - Production ready with auto-initialization
   app.get("/api/batches", async (req: any, res) => {
     try {
+      // Ensure database tables exist before querying
+      const { ensureTablesExist } = await import('./ensure-schema');
+      await ensureTablesExist();
+      
       // Get real batches with dynamic student counts from database
       const batches = await storage.getAllBatches();
       
@@ -3256,30 +3260,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error) {
       console.error("Error fetching batches:", error);
-      
-      // If database error, try to initialize and retry once
-      try {
-        console.log('🔄 Attempting database initialization...');
-        const { safeInitializeDatabase } = await import('./production-db');
-        await safeInitializeDatabase();
-        
-        // Retry after initialization
-        const batches = await storage.getAllBatches();
-        res.json(batches);
-        
-      } catch (initError) {
-        console.error("Failed to initialize database:", initError);
-        res.status(500).json({ 
-          message: "Database not available. Please ensure PostgreSQL is running and configured properly.",
-          error: (error as Error).message 
-        });
-      }
+      res.status(500).json({ 
+        message: "Failed to fetch batches. Database may not be properly initialized.",
+        error: (error as Error).message 
+      });
     }
   });
 
   // Create new batch - Production ready version
   app.post("/api/batches", requireAuth, async (req: any, res) => {
     try {
+      // Ensure database tables exist before creating batch
+      const { ensureTablesExist } = await import('./ensure-schema');
+      await ensureTablesExist();
+      
       const { name, subject, classTime, classDays, maxStudents, startDate, endDate } = req.body;
       const user = req.session?.user;
 
@@ -3295,6 +3289,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!subject) {
         return res.status(400).json({ message: "Subject is required" });
+      }
+
+      // Validate subject is one of the allowed values
+      const allowedSubjects = ['science', 'math', 'higher-math'];
+      if (!allowedSubjects.includes(subject)) {
+        return res.status(400).json({ message: "Invalid subject. Must be one of: science, math, higher-math" });
       }
 
       // Generate unique batch code (subject prefix + timestamp)

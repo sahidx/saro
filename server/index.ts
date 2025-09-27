@@ -200,6 +200,10 @@ app.use(async (req, res, next) => {
         console.warn('⚠️ Migration failed, trying to continue:', migrationError);
       }
       
+      // Ensure database schema exists first
+      const { ensureTablesExist } = await import('./ensure-schema');
+      await ensureTablesExist();
+      
       // Initialize database with seed data if needed
       const { safeInitializeDatabase } = await import('./production-db');
       await safeInitializeDatabase();
