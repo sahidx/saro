@@ -31,6 +31,7 @@ jobs:
               cd /var/www/saro &&
               git fetch origin main &&
               git reset --hard origin/main &&
+              echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' > .env.production &&
               npm ci &&
               npm run build &&
               npx drizzle-kit push &&
