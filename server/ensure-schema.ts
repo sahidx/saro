@@ -43,32 +43,52 @@ async function createDatabaseSchema() {
   console.log('🔨 Creating database tables...');
   
   try {
-    // Create enums first
-    await db.execute(sql`
-      DO $$ BEGIN
-        CREATE TYPE user_role AS ENUM ('teacher', 'student', 'super_user');
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
+    // First, try to grant permissions if we have sufficient privileges
+    try {
+      await db.execute(sql`GRANT ALL ON SCHEMA public TO CURRENT_USER;`);
+      await db.execute(sql`GRANT ALL ON ALL TABLES IN SCHEMA public TO CURRENT_USER;`);
+      await db.execute(sql`GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO CURRENT_USER;`);
+      console.log('✅ Granted database permissions');
+    } catch (permError: any) {
+      console.warn('⚠️ Could not grant permissions (may already exist):', permError?.message || 'Unknown error');
+    }
     
-    await db.execute(sql`
-      DO $$ BEGIN
-        CREATE TYPE subject AS ENUM ('science', 'math', 'higher-math');
-      EXCEPTION
-        WHEN duplicate_object THEN 
-          -- If enum exists, try to add new values
-          ALTER TYPE subject ADD VALUE IF NOT EXISTS 'higher-math';
-      END $$;
-    `);
+    // Create enums first with better error handling
+    try {
+      await db.execute(sql`
+        DO $$ BEGIN
+          CREATE TYPE user_role AS ENUM ('teacher', 'student', 'super_user');
+        EXCEPTION
+          WHEN duplicate_object THEN null;
+        END $$;
+      `);
+    } catch (enumError: any) {
+      console.warn('⚠️ user_role enum issue:', enumError?.message || 'Unknown error');
+    }
     
-    await db.execute(sql`
-      DO $$ BEGIN
-        CREATE TYPE batch_status AS ENUM ('active', 'inactive', 'completed');
-      EXCEPTION
-        WHEN duplicate_object THEN null;
-      END $$;
-    `);
+    try {
+      await db.execute(sql`
+        DO $$ BEGIN
+          CREATE TYPE subject AS ENUM ('science', 'math', 'higher-math');
+        EXCEPTION
+          WHEN duplicate_object THEN null;
+        END $$;
+      `);
+    } catch (enumError: any) {
+      console.warn('⚠️ subject enum issue:', enumError?.message || 'Unknown error');
+    }
+    
+    try {
+      await db.execute(sql`
+        DO $$ BEGIN
+          CREATE TYPE batch_status AS ENUM ('active', 'inactive', 'completed');
+        EXCEPTION
+          WHEN duplicate_object THEN null;
+        END $$;
+      `);
+    } catch (enumError: any) {
+      console.warn('⚠️ batch_status enum issue:', enumError?.message || 'Unknown error');
+    }
     
     // Create users table
     await db.execute(sql`

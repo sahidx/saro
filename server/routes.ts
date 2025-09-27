@@ -3227,9 +3227,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all batches - Production ready with auto-initialization
   app.get("/api/batches", async (req: any, res) => {
     try {
-      // Ensure database tables exist before querying
-      const { ensureTablesExist } = await import('./ensure-schema');
-      await ensureTablesExist();
+      // Ensure database is properly set up before querying
+      const { setupDatabaseProper } = await import('./database-setup-proper');
+      await setupDatabaseProper();
       
       // Get real batches with dynamic student counts from database
       const batches = await storage.getAllBatches();
@@ -3270,9 +3270,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new batch - Production ready version
   app.post("/api/batches", requireAuth, async (req: any, res) => {
     try {
-      // Ensure database tables exist before creating batch
-      const { ensureTablesExist } = await import('./ensure-schema');
-      await ensureTablesExist();
+      // Ensure database is properly set up before creating batch
+      const { setupDatabaseProper } = await import('./database-setup-proper');
+      await setupDatabaseProper();
       
       const { name, subject, classTime, classDays, maxStudents, startDate, endDate } = req.body;
       const user = req.session?.user;
