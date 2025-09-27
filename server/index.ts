@@ -186,23 +186,15 @@ app.use(async (req, res, next) => {
     try {
       console.log('🚀 Initializing database...');
       
-      // Auto-run database migration
-      const { execSync } = await import('child_process');
+      // Use simple manual table creation instead of complex migrations
+      const { createTablesManually } = await import('./simple-db-setup');
       try {
-        console.log('📋 Running database migrations...');
-        execSync('npm run db:push', { 
-          stdio: 'inherit',
-          cwd: process.cwd(),
-          timeout: 60000 
-        });
-        console.log('✅ Database migrations completed');
-      } catch (migrationError) {
-        console.warn('⚠️ Migration failed, trying to continue:', migrationError);
+        console.log('📋 Creating database tables...');
+        await createTablesManually();
+        console.log('✅ Database tables created successfully');
+      } catch (dbError: any) {
+        console.warn('⚠️ Database setup failed, trying to continue:', dbError.message);
       }
-      
-      // Set up database properly with migrations
-      const { setupDatabaseProper } = await import('./database-setup-proper');
-      await setupDatabaseProper();
       
       console.log('🎉 Database initialization complete!');
       

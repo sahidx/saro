@@ -5,8 +5,11 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "start": "cross-env NODE_ENV=production node dist/index.js",
+    "build": "vite build",
+    "build:server": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build:all": "npm run build && npm run build:server",
+    "start": "cross-env NODE_ENV=production tsx server/index.ts",
+    "start:compiled": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
@@ -14,8 +17,9 @@
     "validate-production": "tsx validate-production.ts",
     "deploy": "npm run validate-production && npm run build",
     "production-start": "cross-env NODE_ENV=production npm run build && npm start",
-    "vps:setup": "npm run db:setup && npm run build",
-    "vps:start": "npm run production-start"
+    "vps:setup": "./setup-vps-postgresql.sh",
+    "vps:start": "./start-production.sh",
+    "vps:verify": "./verify-deployment.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.37.0",

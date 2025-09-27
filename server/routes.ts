@@ -14,6 +14,7 @@ import { db } from "./db";
 import { eq, desc, and, sql, asc, inArray, gte, lte } from "drizzle-orm";
 // import { setupLocalAuth } from "./localAuth";
 import { getDefaultGradingScheme, calculateGradeFromPercentage, calculateGradeDistribution } from "./gradingSystem";
+import { createTablesManually, checkTablesExist } from './simple-db-setup';
 
 // Helper function to generate random password
 function generateRandomPassword(): string {
@@ -3227,9 +3228,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all batches - Production ready with auto-initialization
   app.get("/api/batches", async (req: any, res) => {
     try {
-      // Ensure database is properly set up before querying
-      const { setupDatabaseProper } = await import('./database-setup-proper');
-      await setupDatabaseProper();
+      // Simple database connection check
+      try {
+        await db.execute(sql`SELECT 1`);
+      } catch (dbError: any) {
+        return res.status(500).json({ 
+          message: "Database connection failed. Please ensure PostgreSQL is running.",
+          error: dbError.message 
+        });
+      }
       
       // Get real batches with dynamic student counts from database
       const batches = await storage.getAllBatches();
@@ -3270,9 +3277,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new batch - Production ready version
   app.post("/api/batches", requireAuth, async (req: any, res) => {
     try {
-      // Ensure database is properly set up before creating batch
-      const { setupDatabaseProper } = await import('./database-setup-proper');
-      await setupDatabaseProper();
+      // Simple database connection check (no complex setup during batch creation)
+      try {
+        await db.execute(sql`SELECT 1`);
+      } catch (dbError: any) {
+        return res.status(500).json({ 
+          message: "Database connection failed. Please ensure PostgreSQL is running.",
+          error: dbError.message 
+        });
+      }
       
       const { name, subject, classTime, classDays, maxStudents, startDate, endDate } = req.body;
       const user = req.session?.user;
