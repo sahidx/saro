@@ -28,14 +28,29 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+              set -e
               cd /var/www/saro &&
               git fetch origin main &&
               git reset --hard origin/main &&
-              echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' > .env.production &&
-              npm ci &&
-              npm run build &&
-              npx drizzle-kit push &&
-              pm2 delete saro || true &&
-              pm2 start dist/index.js --name saro -f &&
+
+              # Write production environment variables
+              echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' > .env.production
+              echo 'NODE_ENV=production' >> .env.production
+              echo 'PORT=5000' >> .env.production
+              echo 'SESSION_SECRET=${{ secrets.SESSION_SECRET }}' >> .env.production
+
+              # Reinstall dependencies fresh
+              rm -rf node_modules package-lock.json
+              npm install
+
+              # Build project
+              npm run build
+
+              # Run database migrations
+              npx drizzle-kit push
+
+              # Restart PM2
+              pm2 delete saro || true
+              pm2 start dist/index.js --name saro -f
               pm2 save
           "
