@@ -1,56 +1,31 @@
-name: Deploy to VPS
 
-on:
-  push:
-    branches: [ "main" ]
+- name: Deploy to VPS
+  run: |
+    ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
+      ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+        set -e
+        cd /var/www/saro &&
+        git fetch origin main &&
+        git reset --hard origin/main &&
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+        # Write production environment variables
+        echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' > .env.production
+        echo 'NODE_ENV=production' >> .env.production
+        echo 'PORT=5000' >> .env.production
+        echo 'SESSION_SECRET=${{ secrets.SESSION_SECRET }}' >> .env.production
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        # Reinstall dependencies
+        rm -rf node_modules
+        npm ci
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        # Build project
+        npm run build
 
-      - name: Install build tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential python3 make g++ gcc libsqlite3-dev
+        # Run migrations
+        npx drizzle-kit push
 
-      - name: Deploy to VPS
-        run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-              set -e
-              cd /var/www/saro &&
-              git fetch origin main &&
-              git reset --hard origin/main &&
-
-              # Write production environment variables
-              echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' > .env.production
-              echo 'NODE_ENV=production' >> .env.production
-              echo 'PORT=5000' >> .env.production
-              echo 'SESSION_SECRET=${{ secrets.SESSION_SECRET }}' >> .env.production
-
-              # Reinstall dependencies fresh
-              rm -rf node_modules package-lock.json
-              npm install
-
-              # Build project
-              npm run build
-
-              # Run database migrations
-              npx drizzle-kit push
-
-              # Restart PM2
-              pm2 delete saro || true
-              pm2 start dist/index.js --name saro -f
-              pm2 save
-          "
+        # Restart PM2 with env
+        pm2 delete saro || true
+        pm2 start dist/index.js --name saro -f --env production
+        pm2 save
+    "
