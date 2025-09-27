@@ -34,6 +34,7 @@ jobs:
               git reset --hard origin/main &&
               npm ci &&
               npm run build &&
-              pm2 restart saro || pm2 start dist/index.js --name saro &&
+              pm2 delete saro || true &&
+              pm2 start dist/index.js --name saro -f &&
               pm2 save
           "
