@@ -40,18 +40,22 @@ jobs:
               echo 'PORT=5000' >> .env.production
               echo 'SESSION_SECRET=${{ secrets.SESSION_SECRET }}' >> .env.production
 
-              # Reinstall dependencies
+              # Clean + install dependencies
               rm -rf node_modules package-lock.json
               npm install
+
+              # Make sure drizzle packages exist
+              npm install drizzle-orm --save
+              npm install drizzle-kit --save-dev
 
               # Build project
               npm run build
 
-              # Run database migrations
+              # Run database migrations (don’t stop deploy if fails)
               npx drizzle-kit push || echo '⚠️ Migration failed, continuing...'
 
-              # Restart PM2 with .env.production
+              # Restart PM2 with env file
               pm2 delete saro || true
-              pm2 start dist/index.js --name saro -f --env production
+              pm2 start dist/index.js --name saro -f --env production --update-env
               pm2 save
           "
